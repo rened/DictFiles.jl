@@ -1,7 +1,7 @@
 module DictFiles
 
 export DictFile, dictopen, close, compact
-export getindex, setindex!, delete!, mmap
+export getindex, get, getkey, setindex!, delete!, mmap
 export keys, haskey
 
 using HDF5, JLD
@@ -108,6 +108,12 @@ function setindex!(a::DictFile, v, k...)
   write(a.jld, key, v)
 end
 
+
+#####################################################
+##   get, getkey
+
+get(a, default, k...)    = haskey(a, k...) ? a[k...] : default
+getkey(a, default, k...) = haskey(a, k...) ? k : default
 
 #####################################################
 ##   delete!

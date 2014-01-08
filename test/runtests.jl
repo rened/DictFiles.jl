@@ -45,6 +45,12 @@ facts("DictFiles core functions") do
             @fact a[] => {"a" => "test", "b" => data, :c => "c"}
             @fact haskey(a, "a") => true
             @fact haskey(a, "z") => false
+
+            @fact get(a, 1, "a") => "test"
+            @fact get(a, 1, "z") => 1
+
+            @fact getkey(a, 1, "a") => ("a",)
+            @fact getkey(a, 1, "z") => 1
         end
     end
 
