@@ -1,9 +1,11 @@
 module DictFiles
 
-export DictFile, getindex, setindex!, mmap, close
+export DictFile, dictopen, getindex, setindex!, mmap, close, compact, delete!
 
 using HDF5, JLD
+
 defaultmode = "r+"
+
 type DictFile
   fid::JLD.JldFile
   basekey::Tuple
@@ -33,8 +35,6 @@ function DictFile(a::DictFile, k...)
   DictFile(a.fid, tuple(a.basekey..., k...))
 end
 
-
-#end
 
 function dictopen(f::Function, args...)
     fid = DictFile(args...)
@@ -86,7 +86,8 @@ function setindex!(a::DictFile, v, k...)
   write(a.fid, key, v)
 end
 
-delete(a::DictFile, k...) = (key = makekey(a,k); exists(a.fid, key) ? HDF5.o_delete(a.fid.plain,key) : nothing)
+import Base.delete!
+delete!(a::DictFile, k...) = (key = makekey(a,k); exists(a.fid, key) ? HDF5.o_delete(a.fid.plain,key) : nothing)
 
 function mmap(a::DictFile, k...) 
   dataset = a.fid[makekey(a, k)]
