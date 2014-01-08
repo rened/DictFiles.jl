@@ -114,6 +114,7 @@ function setindex!(a::DictFile, v, k...)
   end
 
   write(a.jld, key, v)
+  flush(a.jld.plain[key])
 end
 
 
