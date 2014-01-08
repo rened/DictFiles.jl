@@ -43,6 +43,8 @@ facts("DictFiles core functions") do
         end
         dictopen(name) do a
             @fact a[] => {"a" => "test", "b" => data, :c => "c"}
+            @fact haskey(a, "a") => true
+            @fact haskey(a, "z") => false
         end
     end
 

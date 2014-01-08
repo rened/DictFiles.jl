@@ -1,6 +1,8 @@
 module DictFiles
 
-export DictFile, dictopen, getindex, setindex!, mmap, close, compact, delete!
+export DictFile, dictopen, close, compact
+export getindex, setindex!, delete!, mmap
+export keys, haskey
 
 using HDF5, JLD
 
@@ -11,7 +13,7 @@ defaultmode = "r+"
 ##   DictFile, dictfile
 
 type DictFile
-  fid::JLD.JldFile
+  jld::JLD.JldFile
   basekey::Tuple
   function DictFile(filename::String, mode::String = defaultmode)
     exists(f) = (s = stat(filename); s.inode!=0)
@@ -24,7 +26,7 @@ type DictFile
     end
     
     a = new(jldopen(filename, mode),()) 
-    finalizer(a) = (println("finalizer called"); isempty(a.basekey) ? close(a.fid) : nothing)
+    finalizer(a) = (println("finalizer called"); isempty(a.basekey) ? close(a.jld) : nothing)
     a
   end
   DictFile(fid::JLD.JldFile, basekey::Tuple) = new(fid, basekey)
@@ -32,11 +34,11 @@ end
 
 DictFile(filename::String, mode::String = defaultmode, k...) = DictFile(DictFile(filename, mode), k...)
 function DictFile(a::DictFile, k...) 
-  d = a.fid[makekey(a,k)]
+  d = a.jld[makekey(a,k)]
   if !(typeof(d) <: JLD.JldGroup)
     error("DictFile: Try to get proxy DictFile for key $k but that is not a JldGroup")
   end
-  DictFile(a.fid, tuple(a.basekey..., k...))
+  DictFile(a.jld, tuple(a.basekey..., k...))
 end
 
 
@@ -53,7 +55,7 @@ end
 ##   close
 
 import Base.close
-close(a::DictFile) = close(a.fid)
+close(a::DictFile) = close(a.jld)
 
 
 #####################################################
@@ -75,12 +77,12 @@ function getindex(a::DictFile, k...)
   if isempty(k)
     k2 = keys(a)
     return Dict(k2, [getindex(a,x) for x in k2])
-  elseif typeof(a.fid[key]) <: JLD.JldGroup
+  elseif typeof(a.jld[key]) <: JLD.JldGroup
     k2 = keys(a, k...)
     d2 = DictFile(a, k...)
     return Dict(k2, map(x->getindex(d2,x), k2))
   else
-    return read(a.fid, key) 
+    return read(a.jld, key) 
   end
 end
 
@@ -94,16 +96,16 @@ function setindex!(a::DictFile, v, k...)
   key = makekey(a, k)
   for i in 1:length(k)-1
     subkey = makekey(a, k[1:i])
-    if exists(a.fid,subkey) && !(typeof(a.fid[subkey]) <: JLD.JldGroup)
-      HDF5.o_delete(a.fid.plain, subkey)
+    if exists(a.jld,subkey) && !(typeof(a.jld[subkey]) <: JLD.JldGroup)
+      HDF5.o_delete(a.jld.plain, subkey)
     end
   end
 
-  if exists(a.fid, key)
-    HDF5.o_delete(a.fid.plain, key)
+  if exists(a.jld, key)
+    HDF5.o_delete(a.jld.plain, key)
   end
 
-  write(a.fid, key, v)
+  write(a.jld, key, v)
 end
 
 
@@ -111,14 +113,14 @@ end
 ##   delete!
 
 import Base.delete!
-delete!(a::DictFile, k...) = (key = makekey(a,k); exists(a.fid, key) ? HDF5.o_delete(a.fid.plain,key) : nothing)
+delete!(a::DictFile, k...) = (key = makekey(a,k); exists(a.jld, key) ? HDF5.o_delete(a.jld.plain,key) : nothing)
 
 
 #####################################################
 ##   mmap
 
 function mmap(a::DictFile, k...) 
-  dataset = a.fid[makekey(a, k)]
+  dataset = a.jld[makekey(a, k)]
   if ismmappable(dataset.plain) 
     return readmmap(dataset.plain) 
   else
@@ -127,13 +129,14 @@ function mmap(a::DictFile, k...)
 end
 
 #####################################################
-##   keys
+##   keys, haskey
 
 import Base.keys
 parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a) 
-keys(a::DictFile) = [parsekey(x) for x in  names(a.fid)]
-keys(a::DictFile, k...) = [parsekey(x) for x in setdiff(names(a.fid[makekey(a, k)]), {:id, :file, :plain})]
+keys(a::DictFile) = [parsekey(x) for x in  names(a.jld)]
+keys(a::DictFile, k...) = [parsekey(x) for x in setdiff(names(a.jld[makekey(a, k)]), {:id, :file, :plain})]
 
+haskey(a, k...) = exists(a.jld, makekey(a, k))
 
 
 #####################################################
@@ -162,7 +165,7 @@ function compact(filename::String)
   dictopen(tmpfilename,"w") do to
     dictopen(filename) do from
       function copykey(k)
-        d = from.fid[makekey(from, k)]
+        d = from.jld[makekey(from, k)]
         if typeof(d) <: JLD.JldGroup
           map(x->copykey(tuple(k..., x)), keys(from, k...))
           assert(isempty(setdiff(keys(from, k...), keys(to, k...))))
