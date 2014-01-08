@@ -66,6 +66,15 @@ facts("DictFiles core functions") do
         end
     end
 
+    context("Compacting") do
+        oldsize = filesize(name)
+        compact(name)
+        dictopen(name) do a
+            @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        end       
+        @fact filesize(name)<oldsize => true
+    end
+
 #    context("Testing mmapping") do
 #        name = tempname()
 #        dictopen(name) do a
