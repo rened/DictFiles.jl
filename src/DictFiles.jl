@@ -6,6 +6,10 @@ using HDF5, JLD
 
 defaultmode = "r+"
 
+
+#####################################################
+##   DictFile, dictfile
+
 type DictFile
   fid::JLD.JldFile
   basekey::Tuple
@@ -45,9 +49,24 @@ function dictopen(f::Function, args...)
     end
 end
 
+#####################################################
+##   close
+
+import Base.close
+close(a::DictFile) = close(a.fid)
+
+
+#####################################################
+##   getindex, setindex!
 
 function makekey(a::DictFile, k::Tuple)
-  r = join(Base.map(string, tuple(a.basekey..., k...)), "/")
+  function makeliteral(a) 
+    buf = IOBuffer()
+    show(buf,a)
+    return takebuf_string(buf)
+  end
+  r = join(Base.map(makeliteral, tuple(a.basekey..., k...)), "/")
+  #@show r
   r
 end
 
@@ -64,6 +83,7 @@ function getindex(a::DictFile, k...)
     return read(a.fid, key) 
   end
 end
+
 setindex!(a::DictFile, v::Dict, k...) = map(x->setindex!(a, v[x], tuple(k...,x)...), keys(v))
 
 function setindex!(a::DictFile, v, k...) 
@@ -86,23 +106,38 @@ function setindex!(a::DictFile, v, k...)
   write(a.fid, key, v)
 end
 
+
+#####################################################
+##   delete!
+
 import Base.delete!
 delete!(a::DictFile, k...) = (key = makekey(a,k); exists(a.fid, key) ? HDF5.o_delete(a.fid.plain,key) : nothing)
 
+
+#####################################################
+##   mmap
+
 function mmap(a::DictFile, k...) 
   dataset = a.fid[makekey(a, k)]
-  if ismmappable(dataset) 
-    return readmmap(dataset) 
+  if ismmappable(dataset.plain) 
+    return readmmap(dataset.plain) 
   else
     error("DictFile: The dataset for $k does not support mmapping")
   end
 end
-import Base.keys
-keys(a::DictFile) = names(a.fid)
-keys(a::DictFile, k...) = setdiff(names(a.fid[makekey(a, k)]), {:id, :file, :plain})
 
-import Base.close
-close(a::DictFile) = close(a.fid)
+#####################################################
+##   keys
+
+import Base.keys
+parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a) 
+keys(a::DictFile) = [parsekey(x) for x in  names(a.fid)]
+keys(a::DictFile, k...) = [parsekey(x) for x in setdiff(names(a.fid[makekey(a, k)]), {:id, :file, :plain})]
+
+
+
+#####################################################
+##   dump
 
 import Base.dump
 dump(a::DictFile) = dump(STDOUT, a)
@@ -117,6 +152,10 @@ function dump(io::IO, a::DictFile, maxdepth::Int = typemax(Int))
   end
   Base.map(x->printkey(tuple(x), maxdepth), sort(keys(a)))
 end
+
+
+#####################################################
+##   compact
 
 function compact(filename::String)
   tmpfilename = tempname()
