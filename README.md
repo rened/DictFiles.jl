@@ -42,7 +42,7 @@ Pkg.add("DictFiles")
 Then include it where you need it:
 
 ```jl
-using DataFiles
+using DictFiles
 ```
 
 ## Documentation
