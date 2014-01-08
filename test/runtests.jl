@@ -65,6 +65,11 @@ facts("DictFiles core functions") do
     end
 
     context("Compacting") do
+        rm(name)
+        dictopen(name) do a
+            a["a"] = rand(100,100)
+            a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        end       
         oldsize = filesize(name)
         compact(name)
         dictopen(name) do a
@@ -73,7 +78,7 @@ facts("DictFiles core functions") do
         @fact filesize(name)<oldsize => true
     end
 
-    context("Testing error handling") do
+    context("Error handling") do
         dictopen(name) do a
             @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
 
@@ -82,8 +87,7 @@ facts("DictFiles core functions") do
         end
     end
 
-    context("Testing mmapping") do
-        name = tempname()
+    context("Memory mapping") do
         dictopen(name) do a
             data = rand(2,3)
             a["m"] = data
@@ -92,6 +96,18 @@ facts("DictFiles core functions") do
         end
     end
 
+    context("Subviews through DictFile(a, keys)") do
+        rm(name)
+        dictopen(name) do a
+            a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+            b = DictFile(a, "a")
+            @fact keys(b) => {1,2}
+            @fact values(b) => {11,22}
+            b[3] = 33
+            @fact b[3] => 33
+            @fact a[] => {"a" => {1 => 11, 2 => 22, 3 => 33}, "b" => data, :c => "c"}
+        end
+    end
     rm(name)
 
 end
