@@ -1,5 +1,3 @@
-module runtests
-
 using FactCheck
 using DictFiles
 
@@ -75,16 +73,6 @@ facts("DictFiles core functions") do
         @fact filesize(name)<oldsize => true
     end
 
-#    context("Testing mmapping") do
-#        name = tempname()
-#        dictopen(name) do a
-#            data = rand(100,200)
-#            a["m"] = data
-#            m = mmap(a, "m") 
-#            @fact a => data
-#        end
-#    end
-
     context("Testing error handling") do
         dictopen(name) do a
             @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
@@ -94,9 +82,20 @@ facts("DictFiles core functions") do
         end
     end
 
-end
+    context("Testing mmapping") do
+        name = tempname()
+        dictopen(name) do a
+            data = rand(2,3)
+            a["m"] = data
+            m = mmap(a, "m") 
+            @fact copy(m) => data
+        end
+    end
+
+    rm(name)
 
 end
+
 
 
 
