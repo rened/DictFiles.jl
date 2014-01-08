@@ -89,7 +89,12 @@ function getindex(a::DictFile, k...)
   end
 end
 
-setindex!(a::DictFile, v::Dict, k...) = map(x->setindex!(a, v[x], tuple(k...,x)...), keys(v))
+function setindex!(a::DictFile, v::Dict, k...) 
+  if isempty(k)
+    map(x->delete!(a,x), keys(a))
+  end
+  map(x->setindex!(a, v[x], tuple(k...,x)...), keys(v))
+end
 
 function setindex!(a::DictFile, v, k...) 
   if isempty(k)
@@ -140,11 +145,16 @@ end
 #####################################################
 ##   haskey, keys, values
 
-haskey(a, k...) = exists(a.jld, makekey(a, k))
+import Base.haskey
+haskey(a::DictFile, k...) = exists(a.jld, makekey(a, k))
 
 import Base.keys
 parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a) 
-keys(a::DictFile) = [parsekey(x) for x in  names(a.jld)]
+function keys(a::DictFile)
+  b = isempty(a.basekey) ? a.jld : a.jld[makekey(a,())]
+  [parsekey(x) for x in names(b)]
+end
+
 function keys(a::DictFile, k...)
     g = a.jld[makekey(a,k)]
     if !(isa(g,JLD.JldGroup))
