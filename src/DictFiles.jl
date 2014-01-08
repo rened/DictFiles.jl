@@ -2,7 +2,7 @@ module DictFiles
 
 export DictFile, dictopen, close, compact
 export getindex, get, getkey, setindex!, delete!, mmap
-export keys, haskey
+export haskey, keys, values
 
 using HDF5, JLD
 
@@ -74,6 +74,9 @@ end
 
 function getindex(a::DictFile, k...) 
   key = makekey(a, k)
+  if !isempty(k) && !exists(a.jld, key)
+    error("DictFile: key $k does not exist")
+  end
   if isempty(k)
     k2 = keys(a)
     return Dict(k2, [getindex(a,x) for x in k2])
@@ -135,14 +138,25 @@ function mmap(a::DictFile, k...)
 end
 
 #####################################################
-##   keys, haskey
+##   haskey, keys, values
+
+haskey(a, k...) = exists(a.jld, makekey(a, k))
 
 import Base.keys
 parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a) 
 keys(a::DictFile) = [parsekey(x) for x in  names(a.jld)]
-keys(a::DictFile, k...) = [parsekey(x) for x in setdiff(names(a.jld[makekey(a, k)]), {:id, :file, :plain})]
+function keys(a::DictFile, k...)
+    g = a.jld[makekey(a,k)]
+    if !(isa(g,JLD.JldGroup))
+      error("DictFile: keys() or values() was called for key $k, but that is not a HDF5 group")
+    end
+  [parsekey(x) for x in setdiff(names(a.jld[makekey(a, k)]), {:id, :file, :plain})]
+end
 
-haskey(a, k...) = exists(a.jld, makekey(a, k))
+import Base.values
+values(a::DictFile, k...) = [a[k..., x] for x in keys(a, k...)]
+
+
 
 
 #####################################################
