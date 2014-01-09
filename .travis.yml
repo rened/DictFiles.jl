@@ -2,7 +2,8 @@ language: cpp
 compiler:
   - clang
 notifications:
-  email: false
+  email: 
+      - github@donner.at
 before_install:
   - sudo add-apt-repository ppa:staticfloat/julia-deps -y
   - sudo add-apt-repository ppa:staticfloat/julianightlies -y
@@ -11,3 +12,4 @@ before_install:
 script:
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("DictFiles"))`); Pkg.pin("DictFiles"); Pkg.resolve()'
   - julia -e 'using DictFiles; @assert isdefined(:DictFiles); @assert typeof(DictFiles) === Module'
+  - julia ~/.julia/DictFiles/test/runtests.jl
