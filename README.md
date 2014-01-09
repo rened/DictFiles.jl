@@ -1,4 +1,4 @@
-[[Build Status][]https://travis-ci.org/rened/DictFiles.jl.png][]
+[![Build Status](https://travis-ci.org/rened/DictFiles.jl.png)](https://travis-ci.org/rened/DictFiles.jl)
 
 # DictFiles
 
@@ -129,5 +129,3 @@ end
 ## Contibuting
 
 I'd be very grateful for bug reports und feature suggestions - please file an issue!
-
-  [[Build Status][]https://travis-ci.org/rened/DictFiles.jl.png]: https://travis-ci.org/rened/DictFiles.jl
