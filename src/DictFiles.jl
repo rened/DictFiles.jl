@@ -6,11 +6,11 @@ export haskey, keys, values
 
 using HDF5, JLD
 
-defaultmode = "r+"
-
 
 #####################################################
 ##   DictFile, dictfile
+
+defaultmode = "r+"
 
 type DictFile
   jld::JLD.JldFile
