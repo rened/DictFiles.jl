@@ -26,7 +26,7 @@ type DictFile
     end
     
     a = new(jldopen(filename, mode),()) 
-    finalizer(a) = (println("finalizer called"); isempty(a.basekey) ? close(a.jld) : nothing)
+    finalizer(a) = (isempty(a.basekey) ? close(a) : nothing)
     a
   end
   DictFile(fid::JLD.JldFile, basekey::Tuple) = new(fid, basekey)
@@ -55,7 +55,9 @@ end
 ##   close
 
 import Base.close
-close(a::DictFile) = close(a.jld)
+function close(a::DictFile) 
+  isempty(a.basekey) ? close(a.jld) : nothing
+end
 
 
 #####################################################
@@ -102,19 +104,28 @@ function setindex!(a::DictFile, v, k...)
   end
 
   key = makekey(a, k)
-  for i in 1:length(k)-1
+  #@show "in setindex" k key
+  for i in 1:length(k) 
     subkey = makekey(a, k[1:i])
     if exists(a.jld,subkey) && !(typeof(a.jld[subkey]) <: JLD.JldGroup)
+      #@show "deleting subkey" subkey
       HDF5.o_delete(a.jld.plain, subkey)
+      flush(a.jld.plain)
     end
   end
 
   if exists(a.jld, key)
+    #@show "in setindex, deleting" key
     HDF5.o_delete(a.jld.plain, key)
+    flush(a.jld.plain)
+    if exists(a.jld, key)
+      error("i thought we deleted this?")
+    end
   end
 
+  #@show "in setindex, writing" key
   write(a.jld, key, v)
-  flush(a.jld.plain[key])
+  flush(a.jld.plain)
 end
 
 
@@ -128,7 +139,14 @@ getkey(a, default, k...) = haskey(a, k...) ? k : default
 ##   delete!
 
 import Base.delete!
-delete!(a::DictFile, k...) = (key = makekey(a,k); exists(a.jld, key) ? HDF5.o_delete(a.jld.plain,key) : nothing)
+function delete!(a::DictFile, k...) 
+  key = makekey(a,k)
+  #@show "deleting" key
+  if exists(a.jld, key)
+    HDF5.o_delete(a.jld.plain,key)
+    flush(a.jld.plain)
+  end
+end
 
 
 #####################################################
