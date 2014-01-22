@@ -61,6 +61,19 @@ facts("Basic reading/writing to files") do
         @fact getkey(a, 1, "a") => ("a",)
         @fact getkey(a, 1, "z") => 1
     end
+
+    context("overwrite fields") do
+        dictopen("/tmp/test","w") do a
+            a[1,1]   = "hi1"
+            a[1]     = "hi2"
+            a[1,2,1] = "hi3"
+            a[1,2]   = "hi4"
+            a[1,2,1] = "hi5"
+            a[1]     = "hi6"
+            a[1,2,1] = "hi7"
+            a[1,3]   = "hi8"
+        end
+    end
 end
 
 facts("Compacting") do
@@ -107,6 +120,9 @@ facts("Subviews through DictFile(a, keys)") do
         @fact a[] => {"a" => {1 => 11, 2 => 22, 3 => 33}, "b" => data, :c => "c"}
     end
 end
+
+
+
 rm(name)
 
 
