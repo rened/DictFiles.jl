@@ -3,12 +3,12 @@ using DictFiles
 
 macro throws_pred(ex) FactCheck.throws_pred(ex) end
 
-name = tempname()
+filename = tempname()
 data = [1 2 3 4 5]
 
 facts("Basic reading/writing to files") do
-    dictopen(name) do a
-        @fact stat(name).inode => not(0)
+    dictopen(filename) do a
+        @fact stat(filename).inode => not(0)
 
         a["a"] = "aa"
         @fact a["a"] => "aa"
@@ -39,7 +39,7 @@ facts("Basic reading/writing to files") do
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
     end
 
-    dictopen(name) do a
+    dictopen(filename) do a
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
         @fact haskey(a, "a") => true
         @fact haskey(a, "z") => false
@@ -63,7 +63,7 @@ facts("Basic reading/writing to files") do
     end
 
     context("overwrite fields") do
-        dictopen("/tmp/test","w") do a
+        dictopen(filename,"w") do a
             a[1,1]   = "hi1"
             a[1]     = "hi2"
             a[1,2,1] = "hi3"
@@ -77,23 +77,23 @@ facts("Basic reading/writing to files") do
 end
 
 facts("Compacting") do
-    rm(name)
-    dictopen(name) do a
+    rm(filename)
+    dictopen(filename) do a
         a["a"] = rand(1000,1000)
     end       
-    oldsize = filesize(name)
-    dictopen(name) do a
+    oldsize = filesize(filename)
+    dictopen(filename) do a
         a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
     end       
-    compact(name)
-    dictopen(name) do a
+    compact(filename)
+    dictopen(filename) do a
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
     end       
-    @fact filesize(name)<oldsize => true
+    @fact filesize(filename)<oldsize => true
 end
 
 facts("Error handling") do
-    dictopen(name) do a
+    dictopen(filename) do a
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
 
         @fact @throws_pred(a["asdf"]) => (true, "error")
@@ -102,7 +102,7 @@ facts("Error handling") do
 end
 
 facts("Memory mapping") do
-    dictopen(name) do a
+    dictopen(filename) do a
         data = rand(2,3)
         a["m"] = data
         m = mmap(a, "m") 
@@ -111,8 +111,8 @@ facts("Memory mapping") do
 end
 
 facts("Subviews through DictFile(a, keys)") do
-    rm(name)
-    dictopen(name) do a
+    rm(filename)
+    dictopen(filename) do a
         a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
         b = DictFile(a, "a")
         @fact keys(b) => {1,2}
@@ -124,7 +124,7 @@ facts("Subviews through DictFile(a, keys)") do
 end
 
 facts("makekey(a, k)") do
-    dictopen(name) do a
+    dictopen(filename) do a
         @fact DictFiles.makekey(a, (1,)) => "/1"
         @fact DictFiles.makekey(a, ('a',)) => "/'a'"
         @fact DictFiles.makekey(a, ("a",)) => "/\"a\""
@@ -142,7 +142,7 @@ facts("makekey(a, k)") do
     end
 end
 
-rm(name)
+rm(filename)
 
 facts("stress test") do
     nopen = 10
