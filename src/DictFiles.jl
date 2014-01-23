@@ -177,10 +177,19 @@ end
 
 
 import Base.keys
-parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a) 
+parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a)
+function sortkeys(a)
+    if all(map(x -> isa(x, Real), a))
+        ind = sortperm(a)
+    else
+        ind = sortperm(map(string, a));
+    end
+    a[ind]
+end
+
 function keys(a::DictFile)
   b = isempty(a.basekey) ? a.jld : a.jld[makekey(a,())]
-  [parsekey(x) for x in names(b)]
+  sortkeys([parsekey(x) for x in names(b)])
 end
 
 function keys(a::DictFile, k...)
@@ -192,7 +201,7 @@ function keys(a::DictFile, k...)
     if !(isa(g,JLD.JldGroup))
       error("DictFile: keys() or values() was called for key $k, but that is not a HDF5 group")
     end
-  [parsekey(x) for x in setdiff(names(a.jld[key]), {:id, :file, :plain})]
+  sortkeys([parsekey(x) for x in setdiff(names(a.jld[key]), {:id, :file, :plain})])
 end
 
 import Base.values

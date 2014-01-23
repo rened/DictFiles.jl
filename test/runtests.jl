@@ -6,6 +6,13 @@ macro throws_pred(ex) FactCheck.throws_pred(ex) end
 filename = tempname()
 data = [1 2 3 4 5]
 
+facts("Helpers") do
+    @fact DictFiles.sortkeys({}) => {}
+    @fact DictFiles.sortkeys({3,2,1}) => {1,2,3}
+    @fact DictFiles.sortkeys({3,2,"1"}) => {"1",2,3}
+    @fact DictFiles.sortkeys({3,2,:a,"b"}) => {2,3,:a,"b"}
+end
+
 facts("Basic reading/writing to files") do
     dictopen(filename) do a
         @fact stat(filename).inode => not(0)
