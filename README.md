@@ -39,6 +39,12 @@ Simply add the package using Julia's package manager once:
 Pkg.add("DictFiles")
 ```
 
+You also need the master branch of `HDF5.jl`:
+
+```jl
+Pkg.checkout("HDF5")
+```
+
 Then include it where you need it:
 
 ```jl
