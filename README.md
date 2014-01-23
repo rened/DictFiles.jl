@@ -47,7 +47,7 @@ using DictFiles
 
 ## Documentation
 
-`DictFile`s behave like nested `Dict`s. The primary way to assess a `DictFile df` is using `df[keys...] = value` and `df[keys...]`.
+`DictFile`s behave like nested `Dict`s. The primary way to assess a `DictFile df` is using `df[keys...] = value` and `df[keys...]`, where `keys` is a tuple of primitive types, i.e. strings, chars, numbers, tuples, small arrays.
 
 ### DictFile, dictopen, close
 
