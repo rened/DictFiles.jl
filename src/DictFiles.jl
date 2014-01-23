@@ -1,7 +1,8 @@
 module DictFiles
 
 export DictFile, dictopen, close, compact
-export getindex, get, getkey, setindex!, delete!, mmap
+export getindex, get, getkey, setindex!, delete!
+@unix ? export mmap : nothing
 export haskey, isdict, keys, values
 
 using HDF5, JLD
@@ -154,14 +155,14 @@ end
 #####################################################
 ##   mmap
 
-function mmap(a::DictFile, k...) 
+@unix ? function mmap(a::DictFile, k...) 
   dataset = a.jld[makekey(a, k)]
   if ismmappable(dataset.plain) 
     return readmmap(dataset.plain) 
   else
     error("DictFile: The dataset for $k does not support mmapping")
   end
-end
+end : nothing
 
 #####################################################
 ##   haskey, keys, values

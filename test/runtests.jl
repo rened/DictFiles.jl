@@ -101,14 +101,14 @@ facts("Error handling") do
     end
 end
 
-facts("Memory mapping") do
+@unix ? facts("Memory mapping") do
     dictopen(filename) do a
         data = rand(2,3)
         a["m"] = data
         m = mmap(a, "m") 
         @fact copy(m) => data
     end
-end
+end : nothing
 
 facts("Subviews through DictFile(a, keys)") do
     rm(filename)
