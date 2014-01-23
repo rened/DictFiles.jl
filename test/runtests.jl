@@ -79,10 +79,12 @@ end
 facts("Compacting") do
     rm(name)
     dictopen(name) do a
-        a["a"] = rand(100,100)
-        a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        a["a"] = rand(1000,1000)
     end       
     oldsize = filesize(name)
+    dictopen(name) do a
+        a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+    end       
     compact(name)
     dictopen(name) do a
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
@@ -121,9 +123,54 @@ facts("Subviews through DictFile(a, keys)") do
     end
 end
 
-
+facts("makekey(a, k)") do
+    dictopen(name) do a
+        @fact DictFiles.makekey(a, (1,)) => "/1"
+        @fact DictFiles.makekey(a, ('a',)) => "/'a'"
+        @fact DictFiles.makekey(a, ("a",)) => "/\"a\""
+        @fact DictFiles.makekey(a, (1,2)) => "/1/2"
+        @fact DictFiles.makekey(a, (1,2,3,4,5)) => "/1/2/3/4/5"
+        @fact DictFiles.makekey(a, (1,'a',3)) => "/1/'a'/3"
+        @fact DictFiles.makekey(a, (1,'a',"a")) => "/1/'a'/\"a\""
+        @fact DictFiles.makekey(a, ("abc",)) => "/\"abc\""
+        @fact DictFiles.makekey(a, ("abc",(1,2))) => "/\"abc\"/(1,2)"
+        @fact DictFiles.makekey(a, (1.,(1,2))) => "/1.0/(1,2)"
+        @fact DictFiles.makekey(a, (1.f0,(1,2))) => "/1.0f0/(1,2)"
+        @fact DictFiles.makekey(a, (1.f0,(1,2),"asdf",'b')) => "/1.0f0/(1,2)/\"asdf\"/'b'"
+        @fact DictFiles.makekey(a, ([1,2,3],)) => "/[1,2,3]"
+        @fact DictFiles.makekey(a, (1000,)) => "/1000"
+    end
+end
 
 rm(name)
+
+facts("stress test") do
+    nopen = 10
+    nwrites = 200
+    types = {Int32,Uint32,Int64,Uint64,Float32,Float64}
+    payload() = rand(types[rand(1:length(types))], tuple(1,tuple(map( x -> rand(1:5), 5)...)...)...)
+
+    filename = tempname()
+
+    for iopen = 1:nopen
+        data = cell(nwrites)
+        readdata = cell(nwrites)
+        dictopen(filename) do a
+            for i = 1:nwrites
+                key = map( x -> rand(1:10), 1:rand(1:3))
+                data[i] = payload()
+                a[key...] = data[i]
+                readdata[i] = a[key...]
+            end
+        end
+        @fact readdata  => data
+    end
+
+    DictFiles.compact(filename)
+
+    rm(filename)
+end
+
 
 
 

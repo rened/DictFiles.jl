@@ -2,7 +2,7 @@ module DictFiles
 
 export DictFile, dictopen, close, compact
 export getindex, get, getkey, setindex!, delete!, mmap
-export haskey, keys, values
+export haskey, isdict, keys, values
 
 using HDF5, JLD
 
@@ -69,9 +69,9 @@ function makekey(a::DictFile, k::Tuple)
     show(buf,a)
     return takebuf_string(buf)
   end
-  r = join(Base.map(makeliteral, tuple(a.basekey..., k...)), "/")
-  #@show r
-  r
+  key = "/"*join(tuple(Base.map(makeliteral, a.basekey)..., Base.map(makeliteral, k)...), "/")
+  #@show key
+  #key
 end
 
 function getindex(a::DictFile, k...) 
@@ -94,6 +94,7 @@ end
 function setindex!(a::DictFile, v::Dict, k...) 
   if isempty(k)
     map(x->delete!(a,x), keys(a))
+    flush(a.jld.plain)
   end
   map(x->setindex!(a, v[x], tuple(k...,x)...), keys(v))
 end
@@ -105,12 +106,13 @@ function setindex!(a::DictFile, v, k...)
 
   key = makekey(a, k)
   #@show "in setindex" k key
-  for i in 1:length(k) 
+  for i in 1:length(k)
     subkey = makekey(a, k[1:i])
-    if exists(a.jld,subkey) && !(typeof(a.jld[subkey]) <: JLD.JldGroup)
+    if exists(a.jld, subkey) && !(typeof(a.jld[subkey]) <: JLD.JldGroup)
       #@show "deleting subkey" subkey
       HDF5.o_delete(a.jld.plain, subkey)
       flush(a.jld.plain)
+      break
     end
   end
 
@@ -166,6 +168,12 @@ end
 
 import Base.haskey
 haskey(a::DictFile, k...) = exists(a.jld, makekey(a, k))
+function isdict(a::DictFile, k...)
+  key = makekey(a,k);
+  e = exists(a.jld, key)
+  e && typeof(a.jld[key]) <: JLD.JldGroup
+end
+
 
 import Base.keys
 parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a) 
@@ -175,11 +183,15 @@ function keys(a::DictFile)
 end
 
 function keys(a::DictFile, k...)
-    g = a.jld[makekey(a,k)]
+    key = makekey(a,k)
+    if !exists(a.jld, key)
+      return {}
+    end
+    g = a.jld[key]
     if !(isa(g,JLD.JldGroup))
       error("DictFile: keys() or values() was called for key $k, but that is not a HDF5 group")
     end
-  [parsekey(x) for x in setdiff(names(a.jld[makekey(a, k)]), {:id, :file, :plain})]
+  [parsekey(x) for x in setdiff(names(a.jld[key]), {:id, :file, :plain})]
 end
 
 import Base.values
@@ -211,11 +223,10 @@ end
 
 function compact(filename::String)
   tmpfilename = tempname()
-  dictopen(tmpfilename,"w") do to
-    dictopen(filename) do from
+  dictopen(filename) do from
+    dictopen(tmpfilename,"w") do to
       function copykey(k)
-        d = from.jld[makekey(from, k)]
-        if typeof(d) <: JLD.JldGroup
+        if isdict(from, k...)
           map(x->copykey(tuple(k..., x)), keys(from, k...))
           assert(isempty(setdiff(keys(from, k...), keys(to, k...))))
         else
@@ -224,9 +235,8 @@ function compact(filename::String)
       end
       [copykey(tuple(x)) for x in keys(from)]
     end
-    close(to)
-    mv(tmpfilename, filename)
   end
+  mv(tmpfilename, filename)
 end
 
 end
