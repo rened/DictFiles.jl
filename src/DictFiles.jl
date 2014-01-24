@@ -72,7 +72,7 @@ function makekey(a::DictFile, k::Tuple)
   end
   key = "/"*join(tuple(Base.map(makeliteral, a.basekey)..., Base.map(makeliteral, k)...), "/")
   #@show key
-  #key
+  key
 end
 
 function getindex(a::DictFile, k...) 
@@ -177,7 +177,20 @@ end
 
 
 import Base.keys
-parsekey(a) = (a = parse(a); isa(a,QuoteNode) ? Base.unquoted(a) : a)
+function parsekey(a)
+  a = parse(a)
+  a = isa(a,QuoteNode) ? Base.unquoted(a) : a
+  try 
+    r = eval(a)
+    if isa(r, Tuple)
+      a = r
+    end
+  catch
+  end
+  #@show a
+  a
+end
+
 function sortkeys(a)
     if all(map(x -> isa(x, Real), a))
         ind = sortperm(a)

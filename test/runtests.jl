@@ -44,6 +44,7 @@ facts("Basic reading/writing to files") do
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data}
         a[:c] = "c"
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+
     end
 
     dictopen(filename) do a
@@ -56,6 +57,10 @@ facts("Basic reading/writing to files") do
         @fact in(:c,keys(a)) => true
         @fact in(1,keys(a, "a")) => true
         @fact in(2,keys(a, "a")) => true
+
+        a[(1,)] = 1
+        @fact a[(1,)] => 1
+        @fact in((1,),keys(a)) => true
 
         @fact in({1 => 11, 2 => 22},values(a)) => true
         @fact in(11,values(a,"a")) => true
@@ -105,6 +110,14 @@ facts("Error handling") do
 
         @fact @throws_pred(a["asdf"]) => (true, "error")
         @fact @throws_pred(a["a",123]) => (true, "error")
+    end
+end
+
+facts("Tuple handling") do
+    dictopen(filename) do a
+        a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] = 123
+        @fact a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] => 123
+        @fact a["a"]["b"] => {("ID", "param", 0, 0x5bca7c69b794f8ce) => 123}
     end
 end
 
