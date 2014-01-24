@@ -178,17 +178,16 @@ end
 
 import Base.keys
 function parsekey(a)
-  a = parse(a)
-  a = isa(a,QuoteNode) ? Base.unquoted(a) : a
+  r = parse(a)
+  r = isa(r,QuoteNode) ? Base.unquoted(r) : r
   try 
-    r = eval(a)
-    if isa(r, Tuple)
-      a = r
+    r2 = eval(r)
+    if isa(r2, Tuple)
+      r = r2
     end
   catch
   end
-  #@show a
-  a
+  r
 end
 
 function sortkeys(a)
