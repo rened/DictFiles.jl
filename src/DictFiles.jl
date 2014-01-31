@@ -5,6 +5,8 @@ export getindex, get, getkey, setindex!, delete!
 @unix ? export mmap : nothing
 export haskey, isdict, keys, values
 
+import Base: getindex, get, getkey, setindex!, delete!, haskey, keys, values
+
 using HDF5, JLD
 
 
@@ -126,7 +128,6 @@ function setindex!(a::DictFile, v, k...)
     end
   end
 
-  #@show "in setindex, writing" key
   write(a.jld, key, v)
   flush(a.jld.plain)
 end
@@ -135,8 +136,8 @@ end
 #####################################################
 ##   get, getkey
 
-get(a, default, k...)    = haskey(a, k...) ? a[k...] : default
-getkey(a, default, k...) = haskey(a, k...) ? k : default
+get(a::DictFile, default, k...)    = haskey(a, k...) ? a[k...] : default
+getkey(a::DictFile, default, k...) = haskey(a, k...) ? k : default
 
 #####################################################
 ##   delete!
