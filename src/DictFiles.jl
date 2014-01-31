@@ -201,8 +201,8 @@ function sortkeys(a)
 end
 
 function keys(a::DictFile)
-  b = isempty(a.basekey) ? a.jld : a.jld[makekey(a,())]
-  sortkeys([parsekey(x) for x in names(b)])
+    b = isempty(a.basekey) ? a.jld : a.jld[makekey(a,())]
+    sortkeys([parsekey(x) for x in names(b)])
 end
 
 function keys(a::DictFile, k...)
@@ -212,9 +212,9 @@ function keys(a::DictFile, k...)
     end
     g = a.jld[key]
     if !(isa(g,JLD.JldGroup))
-      error("DictFile: keys() or values() was called for key $k, but that is not a HDF5 group")
+      return {}
     end
-  sortkeys([parsekey(x) for x in setdiff(names(a.jld[key]), {:id, :file, :plain})])
+    sortkeys([parsekey(x) for x in setdiff(names(a.jld[key]), {:id, :file, :plain})])
 end
 
 import Base.values
@@ -229,15 +229,15 @@ values(a::DictFile, k...) = [a[k..., x] for x in keys(a, k...)]
 import Base.dump
 dump(a::DictFile) = dump(STDOUT, a)
 function dump(io::IO, a::DictFile, maxdepth::Int = typemax(Int))
-  function printkey(k, maxdepth, indent = 0)
-    #@show k makekey(k) indent keys(a, k...)
-    subkeys = sort(keys(a, k...))
-    println(repeat("  ",indent), k[end], length(subkeys)>0 ? ":" : "")
-    if indent<maxdepth
-      Base.map(x-> printkey(tuple(k...,x), maxdepth, indent+1), subkeys)
+    function printkey(k, maxdepth, indent = 0)
+        #@show k makekey(k) indent keys(a, k...)
+        subkeys = sort(keys(a, k...))
+        println(repeat("  ",indent), k[end], length(subkeys)>0 ? ":" : "")
+        if indent<maxdepth
+            Base.map(x-> printkey(tuple(k...,x), maxdepth, indent+1), subkeys)
+        end
     end
-  end
-  Base.map(x->printkey(tuple(x), maxdepth), sort(keys(a)))
+    Base.map(x->printkey(tuple(x), maxdepth), sort(keys(a)))
 end
 
 
@@ -245,21 +245,21 @@ end
 ##   compact
 
 function compact(filename::String)
-  tmpfilename = tempname()
-  dictopen(filename) do from
-    dictopen(tmpfilename,"w") do to
-      function copykey(k)
-        if isdict(from, k...)
-          map(x->copykey(tuple(k..., x)), keys(from, k...))
-          assert(isempty(setdiff(keys(from, k...), keys(to, k...))))
-        else
-          to[k...] = from[k...]
+    tmpfilename = tempname()
+    dictopen(filename) do from
+        dictopen(tmpfilename,"w") do to
+            function copykey(k)
+                if isdict(from, k...)
+                    map(x->copykey(tuple(k..., x)), keys(from, k...))
+                    assert(isempty(setdiff(keys(from, k...), keys(to, k...))))
+                else
+                    to[k...] = from[k...]
+                end
+          end
+          [copykey(tuple(x)) for x in keys(from)]
         end
-      end
-      [copykey(tuple(x)) for x in keys(from)]
     end
-  end
-  mv(tmpfilename, filename)
+    mv(tmpfilename, filename)
 end
 
 end
