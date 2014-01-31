@@ -102,7 +102,19 @@ function setindex!(a::DictFile, v::Dict, k...)
   map(x->setindex!(a, v[x], tuple(k...,x)...), keys(v))
 end
 
+function setindex!(a::DictFile, v::Nothing, k...) 
+end
+
 function setindex!(a::DictFile, v, k...) 
+## workaround for HDF5 issue #76
+    if v == nothing && length(k>1) && !haskey(a, k[1:end-1]...)
+        setindex!(a, 1, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
+        setindex!(a, v, k...)
+        delete!(a, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
+        return
+    end
+## end workaround
+
   if isempty(k)
     error("DictFile: cannot use empty key $k here")
   end
