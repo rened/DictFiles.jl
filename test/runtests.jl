@@ -65,7 +65,8 @@ facts("Basic reading/writing to files") do
         @fact in({1 => 11, 2 => 22},values(a)) => true
         @fact in(11,values(a,"a")) => true
         @fact in(22,values(a,"a")) => true
-        @fact @throws_pred(values(a,"b")) => (true, "error")
+        @fact keys(a,"b") => {}
+        @fact values(a,"b") => {}
 
         @fact get(a, 1, "a") => {1 => 11, 2 => 22}
         @fact get(a, 1, "z") => 1
