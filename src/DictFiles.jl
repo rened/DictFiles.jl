@@ -108,9 +108,9 @@ end
 function setindex!(a::DictFile, v, k...) 
 ## workaround for HDF5 issue #76
     if v == nothing && length(k>1) && !haskey(a, k[1:end-1]...)
-        setindex!(a, 1, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
+#        setindex!(a, 1, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
         setindex!(a, v, k...)
-        delete!(a, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
+#        delete!(a, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
         return
     end
 ## end workaround
@@ -125,7 +125,7 @@ function setindex!(a::DictFile, v, k...)
     subkey = makekey(a, k[1:i])
     if exists(a.jld, subkey) && !(typeof(a.jld[subkey]) <: JLD.JldGroup)
       #@show "deleting subkey" subkey
-      HDF5.o_delete(a.jld.plain, subkey)
+      delete!(a, k[1:i]...)
       flush(a.jld.plain)
       break
     end
@@ -133,7 +133,7 @@ function setindex!(a::DictFile, v, k...)
 
   if exists(a.jld, key)
     #@show "in setindex, deleting" key
-    HDF5.o_delete(a.jld.plain, key)
+    delete!(a, k...)
     flush(a.jld.plain)
     if exists(a.jld, key)
       error("i thought we deleted this?")
@@ -159,9 +159,11 @@ function delete!(a::DictFile, k...)
   key = makekey(a,k)
   #@show "deleting" key
   if exists(a.jld, key)
-    HDF5.o_delete(a.jld.plain,key)
+    HDF5.o_delete(a.jld, key)
+    #HDF5.o_delete(a.jld,"/_refs"*key)
     flush(a.jld.plain)
   end
+  nothing
 end
 
 
