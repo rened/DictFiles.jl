@@ -16,23 +16,29 @@ using HDF5, JLD
 defaultmode = "r+"
 
 type DictFile
-  jld::JLD.JldFile
-  basekey::Tuple
-  function DictFile(filename::String, mode::String = defaultmode)
-    exists(f) = (s = stat(filename); s.inode!=0)
-    if mode == "r" && !exists(filename)
-      error("DictFile: file $filename does not exist")
-    end
+    jld::JLD.JldFile
+    basekey::Tuple
+    function DictFile(filename::String, mode::String = defaultmode)
+        exists(f) = (s = stat(filename); s.inode != 0 && s.size > 0)
+        if mode == "r" && !exists(filename)
+            error("DictFile: file $filename does not exist")
+        end
 
-    if mode == "r+" && !exists(filename)
-      mode = "w"
+        if mode == "r+" && !exists(filename)
+            mode = "w"
+        end
+        
+        try
+            a = new(jldopen(filename, mode),()) 
+            finalizer(a) = (isempty(a.basekey) ? close(a) : nothing)
+            return a
+        catch e
+            println("DictFile: error while trying to open file $filename")
+            Base.display_error(e, catch_backtrace())
+            rethrow(e)
+        end
     end
-    
-    a = new(jldopen(filename, mode),()) 
-    finalizer(a) = (isempty(a.basekey) ? close(a) : nothing)
-    a
-  end
-  DictFile(fid::JLD.JldFile, basekey::Tuple) = new(fid, basekey)
+    DictFile(fid::JLD.JldFile, basekey::Tuple) = new(fid, basekey)
 end
 
 DictFile(filename::String, mode::String = defaultmode, k...) = DictFile(DictFile(filename, mode), k...)
@@ -193,16 +199,19 @@ end
 
 import Base.keys
 function parsekey(a)
-  r = parse(a)
-  r = isa(r,QuoteNode) ? Base.unquoted(r) : r
-  try 
-    r2 = eval(r)
-    if isa(r2, Tuple)
-      r = r2
+    r = parse(a)
+    r = isa(r,QuoteNode) ? Base.unquoted(r) : r
+    try 
+        if !isa(r, Symbol)
+            r2 = eval(r)
+            if isa(r2, Tuple)
+                r = r2
+            end
+        end
+    catch e
+        Base.display_error(e, catch_backtrace())
     end
-  catch
-  end
-  r
+    r
 end
 
 function sortkeys(a)
