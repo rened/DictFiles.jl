@@ -6,6 +6,7 @@ macro throws_pred(ex) FactCheck.throws_pred(ex) end
 filename = tempname()
 data = [1 2 3 4 5]
 
+
 facts("Helpers") do
     @fact DictFiles.sortkeys({}) => {}
     @fact DictFiles.sortkeys({3,2,1}) => {1,2,3}
@@ -108,9 +109,18 @@ end
 facts("Error handling") do
     dictopen(filename) do a
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
-
-        @fact @throws_pred(a["asdf"]) => (true, "error")
-        @fact @throws_pred(a["a",123]) => (true, "error")
+        try
+            a["asdf"]
+            @fact "no exception" => "exception"
+        catch
+            @fact "exception" => "exception"
+        end
+        try
+            a["a",123]
+            @fact "no exception" => "exception"
+        catch
+            @fact "exception" => "exception"
+        end
     end
 end
 
@@ -193,7 +203,15 @@ facts("stress test") do
 end
 
 
-
+facts("parallel") do
+    addprocs(2)
+    @everywhere using DictFiles
+    filename = tempname()
+    a = @fetchfrom 2 DictFile(filename)
+    a[1] = 10
+    @fact a[1] => 10
+    @fact (@fetchfrom 3 a[1]) => 10
+end
 
 
 
