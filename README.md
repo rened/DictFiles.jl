@@ -123,7 +123,7 @@ When fields get overwritten or explicitly deleted, HDF5 appends the new data to 
 
 ### Memory mapping
 
-Especially when only parts of large arrays are required, or the array is to large to fit in memory, memory mapping is king.
+Especially when only parts of large arrays are required, or the array is too large to fit in memory, memory mapping is king:
 
 ```jl
 dictopen("/tmp/test") do a
