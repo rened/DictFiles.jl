@@ -14,7 +14,7 @@ dictopen("/tmp/test") do a
     a["key3","two"] = "Two!"
     a[4]            = {"last"=>1, "item"=>2.2}
 
-    # a now behaves like this:
+    # 'a' now behaves like this:
     # {"key1" => "Test",
     #  "key2" => [1 2 3],
     #  "key3" => { 1    => "One",
@@ -121,16 +121,6 @@ When fields get overwritten or explicitly deleted, HDF5 appends the new data to 
     DictFiles.compact("/tmp/test")
 ```
 
-### Memory mapping
-
-Especially when only parts of large arrays are required, or the array is too large to fit in memory, memory mapping is king:
-
-```jl
-dictopen("/tmp/test") do a
-    a["mydata"] = rand(100,1000)
-    m = mmap(a, "mydata")  # m is of type Array{Float64}, size 100 x 1000
-end
-```
 
 ## Contibuting
 

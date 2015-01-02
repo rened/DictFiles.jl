@@ -1,0 +1,11 @@
+### Memory mapping
+
+Especially when only parts of large arrays are required, or the array is too large to fit in memory, memory mapping is king:
+
+```jl
+dictopen("/tmp/test") do a
+    a["mydata"] = rand(100,1000)
+    m = mmap(a, "mydata")  # m is of type Array{Float64}, size 100 x 1000
+end
+```
+ 

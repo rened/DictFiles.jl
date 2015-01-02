@@ -1,20 +1,23 @@
 using FactCheck
 using DictFiles
 
+shouldtest(f, a) = length(ARGS) == 0 || in(a, ARGS) ? facts(f, a) : nothing
+shouldtestcontext(f, a) = length(ARGS) < 2 || a == ARGS[2] ? facts(f, a) : nothing
+ 
 macro throws_pred(ex) FactCheck.throws_pred(ex) end
 
 filename = tempname()
 data = [1 2 3 4 5]
 
 
-facts("Helpers") do
+shouldtest("Helpers") do
     @fact DictFiles.sortkeys({}) => {}
     @fact DictFiles.sortkeys({3,2,1}) => {1,2,3}
     @fact DictFiles.sortkeys({3,2,"1"}) => {"1",2,3}
     @fact DictFiles.sortkeys({3,2,:a,"b"}) => {2,3,:a,"b"}
 end
 
-facts("Basic reading/writing to files") do
+shouldtest("Basic reading/writing to files") do
     dictopen(filename) do a
         @fact stat(filename).inode => not(0)
 
@@ -90,7 +93,7 @@ facts("Basic reading/writing to files") do
     end
 end
 
-facts("Compacting") do
+shouldtest("Compacting") do
     rm(filename)
     dictopen(filename) do a
         a["a"] = rand(1000,1000)
@@ -106,7 +109,7 @@ facts("Compacting") do
     @fact filesize(filename)<oldsize => true
 end
 
-facts("Error handling") do
+shouldtest("Error handling") do
     dictopen(filename) do a
         @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
         try
@@ -124,7 +127,7 @@ facts("Error handling") do
     end
 end
 
-facts("Tuple handling") do
+shouldtest("Tuple handling") do
     dictopen(filename) do a
         a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] = 123
         @fact a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] => 123
@@ -132,16 +135,16 @@ facts("Tuple handling") do
     end
 end
 
-@unix ? facts("Memory mapping") do
-    dictopen(filename) do a
-        data = rand(2,3)
-        a["m"] = data
-        m = mmap(a, "m") 
-        @fact copy(m) => data
-    end
-end : nothing
+# @unix ? shouldtest("Memory mapping") do
+#     dictopen(filename) do a
+#         data = rand(2,3)
+#         a["m"] = data
+#         m = mmap(a, "m") 
+#         @fact copy(m) => data
+#     end
+# end : nothing
 
-facts("Subviews through DictFile(a, keys)") do
+shouldtest("Subviews through DictFile(a, keys)") do
     rm(filename)
     dictopen(filename) do a
         a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
@@ -154,7 +157,7 @@ facts("Subviews through DictFile(a, keys)") do
     end
 end
 
-facts("makekey(a, k)") do
+shouldtest("makekey(a, k)") do
     dictopen(filename) do a
         @fact DictFiles.makekey(a, (1,)) => "/1"
         @fact DictFiles.makekey(a, ('a',)) => "/'a'"
@@ -173,9 +176,13 @@ facts("makekey(a, k)") do
     end
 end
 
-rm(filename)
+try
+	rm(filename)
+catch
+end
 
-facts("stress test") do
+
+shouldtest("stress test") do
     nopen = 10
     nwrites = 200
     types = {Int32,Uint32,Int64,Uint64,Float32,Float64}
@@ -203,52 +210,16 @@ facts("stress test") do
 end
 
 
-facts("parallel") do
-    addprocs(2)
-    @everywhere using DictFiles
-    filename = tempname()
-    a = @fetchfrom 2 DictFile(filename)
-    a[1] = 10
-    @fact a[1] => 10
-    @fact (@fetchfrom 3 a[1]) => 10
-end
 
+# shouldtest("parallel") do
+#     addprocs(2)
+#     @everywhere using DictFiles
+#     filename = tempname()
+#     a = @fetchfrom 2 DictFile(filename)
+#     a[1] = 10
+#     @fact a[1] => 10
+#     @fact (@fetchfrom 3 a[1]) => 10
+# end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+info("Testing done.")
+FactCheck.exitstatus()

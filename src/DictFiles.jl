@@ -30,7 +30,7 @@ type DictFile
     jld::JLD.JldFile
     basekey::Tuple
     pid
-    function DictFile(filename::String, mode::String = defaultmode)
+    function DictFile(filename::String, mode::String = defaultmode; compress = false)
         exists(f) = (s = stat(filename); s.inode != 0 && s.size > 0)
         if mode == "r" && !exists(filename)
             error("DictFile: file $filename does not exist")
@@ -41,7 +41,7 @@ type DictFile
         end
         
         try
-            a = new(jldopen(filename, mode),(), myid()) 
+            a = new(jldopen(filename, mode, compress = compress, mmaparrays=true),(), myid()) 
             finalizer(a) = (isempty(a.basekey) ? close(a) : nothing)
             return a
         catch e
@@ -200,6 +200,7 @@ end
 @unix ? function mmap(a::DictFile, k...) 
     @onpid a.pid begin
         dataset = a.jld[makekey(a, k)]
+		@show keys(a)
         if ismmappable(dataset.plain) 
             return readmmap(dataset.plain) 
         else
