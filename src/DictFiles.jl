@@ -11,6 +11,7 @@ using HDF5, JLD
 
 macro onpid(pid, a)
     quote
+		print()  # FIXME - absolutely insane workaround for serialization stack overflow
         r = @fetchfrom $pid try
             $a
         catch e
@@ -41,8 +42,7 @@ type DictFile
         end
         
         try
-            a = new(jldopen(filename, mode, compress = compress, mmaparrays=true),(), myid()) 
-            finalizer(a) = (isempty(a.basekey) ? close(a) : nothing)
+            a = new(jldopen(filename, mode, compress = false, mmaparrays=!compress),(), myid()) 
             return a
         catch e
             println("DictFile: error while trying to open file $filename")
@@ -50,7 +50,7 @@ type DictFile
             rethrow(e)
         end
     end
-    DictFile(fid::JLD.JldFile, basekey::Tuple) = new(fid, basekey, myid())
+    DictFile(fid::JLD.JldFile, basekey::Tuple) = (r=new(fid, basekey, myid()); finalizer(r, x -> close(x)); r)
 end
 
 DictFile(filename::String, mode::String = defaultmode, k...) = DictFile(DictFile(filename, mode), k...)
@@ -81,7 +81,6 @@ function close(a::DictFile)
         @onpid a.pid close(a.jld)
     end
 end
-
 
 #####################################################
 ##   getindex, setindex!
@@ -131,7 +130,7 @@ end
 
 function setindex!(a::DictFile, v, k...) 
     @onpid a.pid begin
-## workaround for HDF5 issue #76
+## workaround for HDF5 issue #76  FIXME
         if v == nothing && length(k>1) && !haskey(a, k[1:end-1]...)
     #        setindex!(a, 1, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
             setindex!(a, v, k...)
@@ -200,7 +199,6 @@ end
 @unix ? function mmap(a::DictFile, k...) 
     @onpid a.pid begin
         dataset = a.jld[makekey(a, k)]
-		@show keys(a)
         if ismmappable(dataset.plain) 
             return readmmap(dataset.plain) 
         else

@@ -135,14 +135,14 @@ shouldtest("Tuple handling") do
     end
 end
 
-# @unix ? shouldtest("Memory mapping") do
-#     dictopen(filename) do a
-#         data = rand(2,3)
-#         a["m"] = data
-#         m = mmap(a, "m") 
-#         @fact copy(m) => data
-#     end
-# end : nothing
+@unix ? shouldtest("Memory mapping") do
+    dictopen(filename) do a
+        data = rand(2,3)
+        a["m"] = data
+        m = mmap(a, "m") 
+        @fact copy(m) => data
+    end
+end : nothing
 
 shouldtest("Subviews through DictFile(a, keys)") do
     rm(filename)
@@ -210,16 +210,15 @@ shouldtest("stress test") do
 end
 
 
+shouldtest("parallel") do
+    addprocs(2)
+    @everywhere using DictFiles
+    filename = tempname()
+    a = @fetchfrom 2 DictFile(filename)
+    a[1] = 10
+    @fact a[1] => 10
+    @fact (@fetchfrom 3 a[1]) => 10
+ end
 
-# shouldtest("parallel") do
-#     addprocs(2)
-#     @everywhere using DictFiles
-#     filename = tempname()
-#     a = @fetchfrom 2 DictFile(filename)
-#     a[1] = 10
-#     @fact a[1] => 10
-#     @fact (@fetchfrom 3 a[1]) => 10
-# end
-
-info("Testing done.")
+println("Testing done.")
 FactCheck.exitstatus()
