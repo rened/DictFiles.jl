@@ -1,7 +1,8 @@
 module DictFiles
+using Blosc
 
 export DictFile, dictopen, close, compact
-export getindex, get, getkey, setindex!, delete!
+export getindex, get, getkey, setindex!, delete!, blosc, deblosc
 @unix ? export mmap : nothing
 export haskey, isdict, keys, values
 
@@ -18,6 +19,19 @@ macro onpid(pid, a)
             e
         end
         isa(r, Exception) ? rethrow(r) : r
+    end
+end
+
+function blosc(a; kargs...)
+    Blosc.set_num_threads()
+    tuple(:blosc_compressed, eltype(a), compress(a; kargs...), size(a)...)
+end
+
+function deblosc(a)
+    if isa(a, Tuple) && a[1] == :blosc_compressed
+		reshape(decompress(a[2], a[3]), a[4:end])
+    else
+        a
     end
 end
 
@@ -110,7 +124,7 @@ function getindex(a::DictFile, k...)
             d2 = DictFile(a, k...)
             return Dict(k2, map(x->getindex(d2,x), k2))
         else
-            return read(a.jld, key) 
+            return deblosc(read(a.jld, key))
         end
     end
 end

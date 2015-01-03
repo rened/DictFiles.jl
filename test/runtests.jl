@@ -17,10 +17,12 @@ shouldtest("Helpers") do
     @fact DictFiles.sortkeys({3,2,:a,"b"}) => {2,3,:a,"b"}
 end
 
-shouldtest("Basic reading/writing to files") do
+shouldtest("basic") do
     dictopen(filename) do a
         @fact stat(filename).inode => not(0)
 
+		a["a"] = (1,2,"a")
+		@fact a["a"] => (1,2,"a")
         a["a"] = "aa"
         @fact a["a"] => "aa"
         @fact a[] => {"a"=>"aa"}
@@ -201,6 +203,11 @@ shouldtest("stress test") do
                 readdata[i] = a[key...]
             end
         end
+		for i = 1:length(data) # FIXME remove this
+			if readdata[i] != data[i]
+			    @show i readdata[i] data[i]
+			end
+		end
         @fact readdata  => data
     end
 
@@ -218,7 +225,17 @@ shouldtest("parallel") do
     a[1] = 10
     @fact a[1] => 10
     @fact (@fetchfrom 3 a[1]) => 10
- end
+end
+
+shouldtest("blosc") do
+    filename = tempname()
+	dictopen(filename) do a
+		data = rand(2,3)
+		b = blosc(data)
+		a["a"] = b
+		@fact a["a"] => data
+	end
+end
 
 println("Testing done.")
 FactCheck.exitstatus()
