@@ -8,24 +8,17 @@ and `HDF5` packages by Tim Holy. A `DictFile` is a standard `JLD` file which beh
 ```jl
 using DictFiles
 dictopen("/tmp/test") do a
-    a["key1"]       = "Test"
-    a["key2"]       = [1 2 3]
-    a["key3",1]     = "One"
-    a["key3","two"] = "Two!"
-    a[4]            = {"last"=>1, "item"=>2.2}
+    a["key1"] = [1 2 3]
+    a["key1"]            # == [1 2 3]
+	a[]                  # == {"key1"=>[1 2 3]}
 
-    # 'a' now behaves like this:
-    # {"key1" => "Test",
-    #  "key2" => [1 2 3],
-    #  "key3" => { 1    => "One",
-    #              "two" => "Two!"},
-    #  4      => { "last" => 1,
-    #              "item" => 2.2}
-    #  }
+    a["key2",1] = "One"
+    a["key2","two"] = 2
+    a["key2"]            # == {1 => "One", "two" => 2}
+    a["key2", 1]         # == "One"
 
-    a["key2"]      # == [1 2 3]
-    a["key3"]      # == {1 => "One", "two" => "Two!"}
-    a[4,"item"]    # == 2.2
+    a[:mykey] = {"item" => 2.2}
+    a[:mykey,"item"]    # == 2.2
 end
 ```
 
