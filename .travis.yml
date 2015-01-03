@@ -12,4 +12,5 @@ before_install:
 script:
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("DictFiles"))`); Pkg.pin("DictFiles"); Pkg.resolve()'
   - julia -e 'Pkg.checkout("HDF5")'
+  - julia -e 'Pkg.checkout("Blosc")'
   - julia ~/.julia/v0.3/DictFiles/test/runtests.jl
