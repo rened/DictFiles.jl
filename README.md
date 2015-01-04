@@ -36,6 +36,7 @@ You also need the master branch of `HDF5.jl`:
 
 ```jl
 Pkg.clone("https://github.com/rened/HDF5.jl")
+Pkg.build("HDF5")
 ```
 
 Then include it where you need it:
