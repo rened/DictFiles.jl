@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get update -qq -y
   - sudo apt-get install libpcre3-dev julia -y
 script:
-  - julia -e 'Pkg.init(); Pkg.checkout("HDF5.jl")'
+  - julia -e 'Pkg.init(); Pkg.checkout("HDF5")'
   - julia -e 'run(`ln -s $(pwd()) $(Pkg.dir("DictFiles"))`); Pkg.pin("DictFiles")'
   - julia -e 'Pkg.add("Blosc"); Pkg.resolve()'
   - julia ~/.julia/v0.3/DictFiles/test/runtests.jl
