@@ -35,7 +35,7 @@ Pkg.add("DictFiles")
 You also need the master branch of `HDF5.jl`:
 
 ```jl
-Pkg.checkout("HDF5")
+Pkg.clone("https://github.com/rened/HDF5.jl")
 ```
 
 Then include it where you need it:

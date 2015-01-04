@@ -137,10 +137,10 @@ shouldtest("Tuple handling") do
     end
 end
 
-@unix ? shouldtest("Memory mapping") do
+@unix ? shouldtest("mmap") do
     dictopen(filename) do a
         data = rand(2,3)
-        a["m"] = data
+        setindex!(a, data, "m"; mmap = true)
         m = mmap(a, "m") 
         @fact copy(m) => data
     end

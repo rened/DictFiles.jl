@@ -56,7 +56,7 @@ type DictFile
         end
         
         try
-            a = new(jldopen(filename, mode, compress = false, mmaparrays=!compress),(), myid()) 
+            a = new(jldopen(filename, mode, compress = false, mmaparrays = false),(), myid()) 
             return a
         catch e
             println("DictFile: error while trying to open file $filename")
@@ -129,29 +129,21 @@ function getindex(a::DictFile, k...)
     end
 end
 
-function setindex!(a::DictFile, v::Dict, k...) 
+function setindex!(a::DictFile, v::Dict, k...; kargs...) 
     @onpid a.pid begin
         if isempty(k)
             map(x->delete!(a,x), keys(a))
             flush(a.jld.plain)
         end
-        map(x->setindex!(a, v[x], tuple(k...,x)...), keys(v))
+        map(x->setindex!(a, v[x], tuple(k...,x)...), keys(v); kargs...)
     end
 end
 
-function setindex!(a::DictFile, v::Nothing, k...) 
+function setindex!(a::DictFile, v::Nothing, k...; kargs...) 
 end
 
-function setindex!(a::DictFile, v, k...) 
+function setindex!(a::DictFile, v, k...; kargs...) 
     @onpid a.pid begin
-## workaround for HDF5 issue #76  FIXME
-        if v == nothing && length(k>1) && !haskey(a, k[1:end-1]...)
-    #        setindex!(a, 1, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
-            setindex!(a, v, k...)
-    #        delete!(a, tuple(k[1:end-1]..., "__dummy_entry_for_nothing_workaround__"))
-            return
-        end
-    ## end workaround
 
         if isempty(k)
             error("DictFile: cannot use empty key $k here")
@@ -178,7 +170,7 @@ function setindex!(a::DictFile, v, k...)
             end
         end
 
-        write(a.jld, key, v)
+        write(a.jld, key, v; kargs...)
         flush(a.jld.plain)
     end
 end
