@@ -11,6 +11,6 @@ before_install:
   - sudo apt-get install libpcre3-dev julia -y
 script:
   - julia -e 'Pkg.init(); Pkg.clone("https://github.com/rened/HDF5.jl"); Pkg.build("HDF5")'
-  - juila -e 'run(`ln -s $(pwd()) $(Pkg.dir("DictFiles"))`); Pkg.pin("DictFiles")'
+  - julia -e 'run(`ln -s $(pwd()) $(Pkg.dir("DictFiles"))`); Pkg.pin("DictFiles")'
   - julia -e 'Pkg.add("Blosc"); Pkg.resolve()'
   - julia ~/.julia/v0.3/DictFiles/test/runtests.jl
