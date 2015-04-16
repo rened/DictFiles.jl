@@ -1,5 +1,5 @@
 module DictFiles
-using Blosc
+using Blosc, FunctionalData
 
 export DictFile, dictopen, close, compact
 export getindex, get, getkey, setindex!, delete!, blosc, deblosc
@@ -100,12 +100,10 @@ end
 ##   getindex, setindex!
 
 function makekey(a::DictFile, k::Tuple)
-    function makeliteral(a) 
-        buf = IOBuffer()
-        show(buf,a)
-        return takebuf_string(buf)
+    if any(map(x->isa(x,Function), k))
+        error("DictFiles.makekey: keys cannot contains functions. Key tuple was: $k")
     end
-    key = "/"*join(tuple(Base.map(makeliteral, a.basekey)..., Base.map(makeliteral, k)...), "/")
+    key = "/"*join(tuple(Base.map(repr, a.basekey)..., Base.map(repr, k)...), "/")
     #@show key
     key
 end
@@ -154,7 +152,6 @@ function setindex!(a::DictFile, v, k...; kargs...)
         for i in 1:length(k)
             subkey = makekey(a, k[1:i])
             if exists(a.jld, subkey) && !(typeof(a.jld[subkey]) <: JLD.JldGroup)
-                #@show "deleting subkey" subkey
                 delete!(a, k[1:i]...)
                 flush(a.jld.plain)
                 break
@@ -169,6 +166,8 @@ function setindex!(a::DictFile, v, k...; kargs...)
                 error("i thought we deleted this?")
             end
         end
+
+        # map(showinfo, v)
 
         write(a.jld, key, v; kargs...)
         flush(a.jld.plain)
@@ -267,13 +266,13 @@ function keys(a::DictFile, k...)
     @onpid a.pid begin
         key = makekey(a,k)
         if  !exists(a.jld, key)
-            return {}
+            return Any[]
         end
         g = a.jld[key]
         if !(isa(g,JLD.JldGroup))
-            return {}
+            return Any[]
         end
-        sortkeys([parsekey(x) for x in setdiff(names(a.jld[key]), {:id, :file, :plain})])
+        sortkeys([parsekey(x) for x in setdiff(names(a.jld[key]), [:id, :file, :plain])])
     end
 end
 
@@ -321,5 +320,7 @@ function compact(filename::String)
     end
     mv(tmpfilename, filename)
 end
+
+include("snapshot.jl")
 
 end
