@@ -1,5 +1,4 @@
-using FactCheck
-using DictFiles
+using FactCheck, DictFiles, Compat
 
 shouldtest(f, a) = length(ARGS) == 0 || in(a, ARGS) ? facts(f, a) : nothing
 shouldtestcontext(f, a) = length(ARGS) < 2 || a == ARGS[2] ? facts(f, a) : nothing
@@ -11,10 +10,10 @@ data = [1 2 3 4 5]
 
 
 shouldtest("Helpers") do
-    @fact DictFiles.sortkeys({}) => {}
-    @fact DictFiles.sortkeys({3,2,1}) => {1,2,3}
-    @fact DictFiles.sortkeys({3,2,"1"}) => {"1",2,3}
-    @fact DictFiles.sortkeys({3,2,:a,"b"}) => {2,3,:a,"b"}
+    @fact DictFiles.sortkeys(Any[]) => Any[]
+    @fact DictFiles.sortkeys([3,2,1]) => [1,2,3]
+    @fact DictFiles.sortkeys([3,2,"1"]) => ["1",2,3]
+    @fact DictFiles.sortkeys([3,2,:a,"b"]) => [2,3,:a,"b"]
 end
 
 shouldtest("basic") do
@@ -25,36 +24,35 @@ shouldtest("basic") do
 		@fact a["a"] => (1,2,"a")
         a["a"] = "aa"
         @fact a["a"] => "aa"
-        @fact a[] => {"a"=>"aa"}
+        @fact a[] => @compat Dict("a"=>"aa")
         a["a",1] = 11
         @fact a["a",1] => 11
-        @fact a["a"] => {1 => 11}
-        @fact a[] => {"a" => {1 => 11}}
+        @fact a["a"] => @compat Dict(1 => 11)
+        @fact a[] => @compat Dict("a" => @compat Dict(1 => 11))
         a["a",2] = 22
         @fact a["a",2] => 22
-        @fact a["a"] => {1 => 11, 2 => 22}
-        @fact a[] => {"a" => {1 => 11, 2 => 22}}
+        @fact a["a"] => @compat Dict(1 => 11, 2 => 22)
+        @fact a[] => @compat Dict("a" => @compat Dict(1 => 11, 2 => 22))
         a["b"] = data
         @fact a["b"] => data
-        @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data}
+        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
 
         delete!(a, "a")
-        @fact a[] => {"b" => data}
+        @fact a[] => @compat Dict("b" => data)
 
         delete!(a, "b")
         @fact a[] => Dict()
 
-        a[] = {"a" => {1 => 11, 2 => 22}, "b" => data}
-        @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data}
-        a["a"] = {1 => 11, 2 => 22}
-        @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data}
+        a[] = @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
+        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
+        a["a"] = @compat Dict(1 => 11, 2 => 22)
+        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
         a[:c] = "c"
-        @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
-
+        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data, :c => "c")
     end
 
     dictopen(filename) do a
-        @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data, :c => "c")
         @fact haskey(a, "a") => true
         @fact haskey(a, "z") => false
 
@@ -68,13 +66,13 @@ shouldtest("basic") do
         @fact a[(1,)] => 1
         @fact in((1,),keys(a)) => true
 
-        @fact in({1 => 11, 2 => 22},values(a)) => true
+        @fact in((@compat Dict(1 => 11, 2 => 22)),values(a)) => true
         @fact in(11,values(a,"a")) => true
         @fact in(22,values(a,"a")) => true
-        @fact keys(a,"b") => {}
-        @fact values(a,"b") => {}
+        @fact keys(a,"b") => Any[]
+        @fact values(a,"b") => Any[]
 
-        @fact get(a, 1, "a") => {1 => 11, 2 => 22}
+        @fact get(a, 1, "a") => @compat Dict(1 => 11, 2 => 22)
         @fact get(a, 1, "z") => 1
 
         @fact getkey(a, 1, "a") => ("a",)
@@ -102,7 +100,7 @@ shouldtest("Compacting") do
     end       
     oldsize = filesize(filename)
     dictopen(filename) do a
-        a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        a[] = @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data, :c => "c")
     end       
     compact(filename)
     dictopen(filename) do a
@@ -180,7 +178,6 @@ end
 
 try
 	rm(filename)
-catch
 end
 
 
