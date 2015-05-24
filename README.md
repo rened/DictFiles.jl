@@ -8,14 +8,14 @@ using DictFiles
 dictopen("/tmp/test") do a
     a["key1"] = [1 2 3]
     a["key1"]            # == [1 2 3]
-	a[]                  # == {"key1"=>[1 2 3]}
+	a[]                  # == Dict("key1"=>[1 2 3])
 
     a["key2",1] = "One"
     a["key2","two"] = 2
-    a["key2"]            # == {1 => "One", "two" => 2}
+    a["key2"]            # == Dict(1 => "One", "two" => 2)
     a["key2", 1]         # == "One"
 
-    a[:mykey] = {"item" => 2.2}
+    a[:mykey] = Dict("item" => 2.2)
     a[:mykey,"item"]    # == 2.2
 end
 ```
@@ -86,16 +86,16 @@ dictopen("/tmp/test") do a
     a["mykey"]                #  returns 1
  
     # following the metaphor of nested Dict's:
-    a[] = {"mykey" => 1, "another key" => {"a"=>"A", :b =>"B", 1=>'c'}}
+    a[] = Dict("mykey" => 1, "another key" => Dict("a"=>"A", :b =>"B", 1=>'c'))
     a[]                       # gets the entire contents as one Dict()
 
     a["another key", :b]      #  "B"
-    a["another key"]          #  {"a"=>"A", :b =>"B", 1=>'c'}
+    a["another key"]          #  Dict("a"=>"A", :b =>"B", 1=>'c')
 
-    keys(a)                   #  {"another key","mykey"} 
-    keys(a,"another key")     #  {"a",1,:b} 
-    values(a)                 #  {{:b=>"B",1=>'c',"a"=>"A"},1} 
-    values(a,"another key")   #  {"A",'c',"B"} 
+    keys(a)                   #  Dict("another key","mykey") 
+    keys(a,"another key")     #  Dict("a",1,:b) 
+    values(a)                 #  [Dict(:b=>"B",1=>'c',"a"=>"A"),1] 
+    values(a,"another key")   #  Dict("A",'c',"B") 
     haskey(a,"mykey") ? println("has key!") : nothing
 
     # note that the default parameter for get comes second! 
@@ -109,12 +109,12 @@ In case you have a very nested data structure in your file and want to only work
 
 ```jl
 dictopen("/tmp/test") do a 
-    a[] = {"some"=>1, "nested data" => {"a" => 1, "b" => 2}}
+    a[] = Dict("some"=>1, "nested data" => Dict("a" => 1, "b" => 2))
     b = DictFile(a, "nested data")   #  e.g., you can pass b to other functions
-    keys(b)                          #  {"a","b"} 
+    keys(b)                          #  {"a","b"] 
     b["c"] = 3 
-    a[]                              #  {"some"=>1, 
-                                     #  "nested data" => {"a" => 1, "b" => 2, "c" => 3}}
+    a[]                              #  Dict("some"=>1, 
+                                     #  "nested data" => Dict("a" => 1, "b" => 2, "c" => 3))
 end
 ```
 
