@@ -1,16 +1,10 @@
-language: cpp
-compiler:
-  - clang
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - release
+  - nightly
 notifications:
   email: 
-      - github@donner.at
-before_install:
-  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-  - sudo add-apt-repository ppa:staticfloat/juliareleases -y
-  - sudo apt-get update -qq -y
-  - sudo apt-get install libpcre3-dev julia -y
-script:
-  - julia -e 'Pkg.init(); Pkg.add("HDF5"); Pkg.checkout("HDF5")'
-  - julia -e 'run(`ln -s $(pwd()) $(Pkg.dir("DictFiles"))`); Pkg.pin("DictFiles")'
-  - julia -e 'Pkg.add("Blosc"); Pkg.resolve()'
-  - julia ~/.julia/v0.3/DictFiles/test/runtests.jl
+    - code@donner.at
