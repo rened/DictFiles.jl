@@ -66,6 +66,20 @@ end
 
 Like `open`, both methods take a mode parameter, with the default being `r+`, with the added behavior for `r+` that the file is created when it does not exist yet.
 
+### dictread, dictwrite
+
+To read the entire contents of a file:
+
+```jl
+r = dictread(filename)
+```
+
+To overwrite the entire contents of a dictfile with a `Dict`:
+
+```jl
+dictwrite(somedict, filename)
+```
+
 ### Setting and getting, browsing, deleting
 
 ```jl
