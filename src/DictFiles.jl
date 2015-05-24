@@ -1,5 +1,5 @@
 module DictFiles
-using Blosc, FunctionalData
+using Blosc, FunctionalData, Compat
 
 export DictFile, dictopen, close, compact
 export getindex, get, getkey, setindex!, delete!, blosc, deblosc
@@ -116,11 +116,11 @@ function getindex(a::DictFile, k...)
         end
         if isempty(k)
             k2 = keys(a)
-            return Dict(k2, [getindex(a,x) for x in k2])
+            return Dict(zip(k2, [getindex(a,x) for x in k2]))
         elseif typeof(a.jld[key]) <: JLD.JldGroup
             k2 = keys(a, k...)
             d2 = DictFile(a, k...)
-            return Dict(k2, map(x->getindex(d2,x), k2))
+            return Dict(zip(k2, map(x->getindex(d2,x), k2)))
         else
             return deblosc(read(a.jld, key))
         end
@@ -318,7 +318,7 @@ function compact(filename::String)
           [copykey(tuple(x)) for x in keys(from)]
         end
     end
-    mv(tmpfilename, filename)
+    mv(tmpfilename, filename, remove_destination=true)
 end
 
 include("snapshot.jl")
