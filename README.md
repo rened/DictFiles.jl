@@ -1,6 +1,6 @@
-**Travis:** [![Build Status](https://travis-ci.org/rened/DictFiles.jl.png)](https://travis-ci.org/rened/DictFiles.jl)
-**0.3:** [![DictFiles](http://pkg.julialang.org/badges/DictFiles_release.svg)](http://pkg.julialang.org/?pkg=DictFiles&ver=release)
-**0.4:** [![DictFiles](http://pkg.julialang.org/badges/DictFiles_nightly.svg)](http://pkg.julialang.org/?pkg=DictFiles&ver=nightly)
+[![Build Status](https://travis-ci.org/rened/DictFiles.jl.png)](https://travis-ci.org/rened/DictFiles.jl)
+[![DictFiles](http://pkg.julialang.org/badges/DictFiles_release.svg)](http://pkg.julialang.org/?pkg=DictFiles&ver=release)
+[![DictFiles](http://pkg.julialang.org/badges/DictFiles_nightly.svg)](http://pkg.julialang.org/?pkg=DictFiles&ver=nightly)
 
 # DictFiles
 
