@@ -100,6 +100,14 @@ shouldtest("basic") do
     end
 end
 
+shouldtest("dictread") do
+    filename = tempname()
+    a = @Dict(:1 => 1, :dict => @Dict(:2 => 2, :3 => 3))
+    dictwrite(a, filename)
+    r = dictread(filename)
+    @fact r => a
+end
+
 shouldtest("Compacting") do
     rm(filename)
     dictopen(filename) do a

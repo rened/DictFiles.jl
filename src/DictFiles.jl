@@ -1,7 +1,7 @@
 module DictFiles
 using Blosc, FunctionalData, Compat
 
-export DictFile, dictopen, close, compact
+export DictFile, dictopen, dictread, dictwrite, close, compact
 export getindex, get, getkey, setindex!, delete!, blosc, deblosc
 @unix ? export mmap : nothing
 export haskey, isdict, keys, values
@@ -74,6 +74,18 @@ function DictFile(a::DictFile, k...)
         error("DictFile: Try to get proxy DictFile for key $k but that is not a JldGroup")
     end
     DictFile(a.jld, tuple(a.basekey..., k...))
+end
+
+function dictread(args...)
+    dictopen(args...) do a
+        a[]
+    end
+end
+
+function dictwrite(v::Dict, args...)
+    dictopen(args...) do a
+        a[] = v
+    end
 end
 
 
