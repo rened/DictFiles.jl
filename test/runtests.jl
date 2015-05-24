@@ -1,4 +1,11 @@
+println("\nRunning runtests.jl ...")
 using FactCheck, DictFiles, Compat
+
+macro Dict(a...)
+    quote
+        @compat Dict($(a...))
+    end
+end
 
 shouldtest(f, a) = length(ARGS) == 0 || in(a, ARGS) ? facts(f, a) : nothing
 shouldtestcontext(f, a) = length(ARGS) < 2 || a == ARGS[2] ? facts(f, a) : nothing
@@ -24,35 +31,35 @@ shouldtest("basic") do
 		@fact a["a"] => (1,2,"a")
         a["a"] = "aa"
         @fact a["a"] => "aa"
-        @fact a[] => @compat Dict("a"=>"aa")
+        @fact a[] => @Dict("a"=>"aa")
         a["a",1] = 11
         @fact a["a",1] => 11
-        @fact a["a"] => @compat Dict(1 => 11)
-        @fact a[] => @compat Dict("a" => @compat Dict(1 => 11))
+        @fact a["a"] => @Dict(1 => 11)
+        @fact a[] => @Dict("a" => @Dict(1 => 11))
         a["a",2] = 22
         @fact a["a",2] => 22
-        @fact a["a"] => @compat Dict(1 => 11, 2 => 22)
-        @fact a[] => @compat Dict("a" => @compat Dict(1 => 11, 2 => 22))
+        @fact a["a"] => @Dict(1 => 11, 2 => 22)
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22))
         a["b"] = data
         @fact a["b"] => data
-        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
 
         delete!(a, "a")
-        @fact a[] => @compat Dict("b" => data)
+        @fact a[] => @Dict("b" => data)
 
         delete!(a, "b")
         @fact a[] => Dict()
 
-        a[] = @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
-        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
-        a["a"] = @compat Dict(1 => 11, 2 => 22)
-        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data)
+        a[] = @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
+        a["a"] = @Dict(1 => 11, 2 => 22)
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
         a[:c] = "c"
-        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data, :c => "c")
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
     end
 
     dictopen(filename) do a
-        @fact a[] => @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data, :c => "c")
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
         @fact haskey(a, "a") => true
         @fact haskey(a, "z") => false
 
@@ -66,13 +73,13 @@ shouldtest("basic") do
         @fact a[(1,)] => 1
         @fact in((1,),keys(a)) => true
 
-        @fact in((@compat Dict(1 => 11, 2 => 22)),values(a)) => true
+        @fact in(@Dict(1 => 11, 2 => 22),values(a)) => true
         @fact in(11,values(a,"a")) => true
         @fact in(22,values(a,"a")) => true
         @fact keys(a,"b") => Any[]
         @fact values(a,"b") => Any[]
 
-        @fact get(a, 1, "a") => @compat Dict(1 => 11, 2 => 22)
+        @fact get(a, 1, "a") => @Dict(1 => 11, 2 => 22)
         @fact get(a, 1, "z") => 1
 
         @fact getkey(a, 1, "a") => ("a",)
@@ -100,18 +107,18 @@ shouldtest("Compacting") do
     end       
     oldsize = filesize(filename)
     dictopen(filename) do a
-        a[] = @compat Dict("a" => (@compat Dict(1 => 11, 2 => 22)), "b" => data, :c => "c")
+        a[] = @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
     end       
     compact(filename)
     dictopen(filename) do a
-        @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
     end       
     @fact filesize(filename)<oldsize => true
 end
 
 shouldtest("Error handling") do
     dictopen(filename) do a
-        @fact a[] => {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
         try
             a["asdf"]
             @fact "no exception" => "exception"
@@ -131,7 +138,7 @@ shouldtest("Tuple handling") do
     dictopen(filename) do a
         a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] = 123
         @fact a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] => 123
-        @fact a["a"]["b"] => {("ID", "param", 0, 0x5bca7c69b794f8ce) => 123}
+        @fact a["a"]["b"] => @Dict(("ID", "param", 0, 0x5bca7c69b794f8ce) => 123)
     end
 end
 
@@ -139,7 +146,7 @@ end
     dictopen(filename) do a
         data = rand(2,3)
         setindex!(a, data, "m"; mmap = true)
-        m = mmap(a, "m") 
+        m = DictFiles.mmap(a, "m") 
         @fact copy(m) => data
     end
 end : nothing
@@ -147,13 +154,13 @@ end : nothing
 shouldtest("Subviews through DictFile(a, keys)") do
     rm(filename)
     dictopen(filename) do a
-        a[] = {"a" => {1 => 11, 2 => 22}, "b" => data, :c => "c"}
+        a[] = @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
         b = DictFile(a, "a")
-        @fact keys(b) => {1,2}
-        @fact values(b) => {11,22}
+        @fact keys(b) => [1,2]
+        @fact values(b) => [11,22]
         b[3] = 33
         @fact b[3] => 33
-        @fact a[] => {"a" => {1 => 11, 2 => 22, 3 => 33}, "b" => data, :c => "c"}
+        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22, 3 => 33), "b" => data, :c => "c")
     end
 end
 
@@ -184,7 +191,7 @@ end
 shouldtest("stress test") do
     nopen = 10
     nwrites = 200
-    types = {Int32,Uint32,Int64,Uint64,Float32,Float64}
+    types = [Int32,Uint32,Int64,Uint64,Float32,Float64]
     payload() = rand(types[rand(1:length(types))], tuple(1,tuple(map( x -> rand(1:5), 5)...)...)...)
 
     filename = tempname()
@@ -234,5 +241,5 @@ shouldtest("blosc") do
 	end
 end
 
-println("Testing done.")
+println("runtests.jl done!")
 FactCheck.exitstatus()
