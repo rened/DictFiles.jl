@@ -1,6 +1,10 @@
 # DictFiles
 
-[![Build Status](https://travis-ci.org/rened/DictFiles.jl.png)](https://travis-ci.org/rened/DictFiles.jl)
+Travis | 0.3 | 0.4
+-------|-----|----
+[![Build Status](https://travis-ci.org/rened/DictFiles.jl.png)](https://travis-ci.org/rened/DictFiles.jl) | 
+[![DictFiles](http://pkg.julialang.org/badges/DictFiles_release.svg)](http://pkg.julialang.org/?pkg=DictFiles&ver=release) |
+[![DictFiles](http://pkg.julialang.org/badges/DictFiles_nightly.svg)](http://pkg.julialang.org/?pkg=DictFiles&ver=nightly)
 
 `DictFiles` provides an easy to use abstraction over the excellent `JLD`
 and `HDF5` packages by Tim Holy. A `DictFile` is a standard `JLD` file which behaves similar to nested `Dict`'s:

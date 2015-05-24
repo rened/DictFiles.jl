@@ -330,7 +330,11 @@ function compact(filename::String)
           [copykey(tuple(x)) for x in keys(from)]
         end
     end
-    mv(tmpfilename, filename, remove_destination=true)
+    if VERSION.minor == 3  # FIXME remove once Compat is updated
+        mv(tmpfilename, filename)
+    else
+        mv(tmpfilename, filename, remove_destination=true)
+    end
 end
 
 include("snapshot.jl")
