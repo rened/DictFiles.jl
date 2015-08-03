@@ -3,7 +3,7 @@ using Blosc, FunctionalData, Compat
 
 export DictFile, dictopen, dictread, dictwrite, close, compact
 export getindex, get, getkey, setindex!, delete!, blosc, deblosc
-@unix ? export mmap : nothing
+export mmap
 export haskey, isdict, keys, values
 
 import Base: getindex, get, getkey, setindex!, delete!, haskey, keys, values
@@ -213,7 +213,7 @@ end
 #####################################################
 ##   mmap
 
-@unix ? function mmap(a::DictFile, k...) 
+function mmap(a::DictFile, k...) 
     @onpid a.pid begin
         dataset = a.jld[makekey(a, k)]
         if ismmappable(dataset.plain) 
@@ -222,7 +222,7 @@ end
             error("DictFile: The dataset for $k does not support mmapping")
         end
     end
-end : nothing
+end
 
 #####################################################
 ##   haskey, keys, values

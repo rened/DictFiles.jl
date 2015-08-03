@@ -155,14 +155,14 @@ shouldtest("Tuple handling") do
     end
 end
 
-@unix ? shouldtest("mmap") do
+shouldtest("mmap") do
     dictopen(filename) do a
         data = rand(2,3)
         setindex!(a, data, "m"; mmap = true)
         m = DictFiles.mmap(a, "m") 
         @fact copy(m) --> data
     end
-end : nothing
+end
 
 shouldtest("Subviews through DictFile(a, keys)") do
     rm(filename)
