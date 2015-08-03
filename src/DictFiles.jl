@@ -76,9 +76,9 @@ function DictFile(a::DictFile, k...)
     DictFile(a.jld, tuple(a.basekey..., k...))
 end
 
-function dictread(args...)
-    dictopen(args...) do a
-        a[]
+function dictread(filename, key...)
+    dictopen(filename) do a
+        a[key...]
     end
 end
 
@@ -259,7 +259,7 @@ function parsekey(a)
 end
 
 function sortkeys(a)
-    if all(map(x -> isa(x, Real), a))
+    if all(x -> isa(x, Real), a)
         ind = sortperm(a)
     else
         ind = sortperm(map(string, a));

@@ -1,4 +1,5 @@
 println("\nRunning runtests.jl ...")
+
 using FactCheck, DictFiles, Compat
 
 macro Dict(a...)
@@ -17,73 +18,73 @@ data = [1 2 3 4 5]
 
 
 shouldtest("Helpers") do
-    @fact DictFiles.sortkeys(Any[]) => Any[]
-    @fact DictFiles.sortkeys([3,2,1]) => [1,2,3]
-    @fact DictFiles.sortkeys([3,2,"1"]) => ["1",2,3]
-    @fact DictFiles.sortkeys([3,2,:a,"b"]) => [2,3,:a,"b"]
+    @fact DictFiles.sortkeys(Any[]) --> Any[]
+    @fact DictFiles.sortkeys([3,2,1]) --> [1,2,3]
+    @fact DictFiles.sortkeys([3,2,"1"]) --> ["1",2,3]
+    @fact DictFiles.sortkeys([3,2,:a,"b"]) --> [2,3,:a,"b"]
 end
 
 shouldtest("basic") do
     dictopen(filename) do a
-        @fact stat(filename).inode => not(0)
+        @fact stat(filename).inode --> not(0)
 
 		a["a"] = (1,2,"a")
-		@fact a["a"] => (1,2,"a")
+		@fact a["a"] --> (1,2,"a")
         a["a"] = "aa"
-        @fact a["a"] => "aa"
-        @fact a[] => @Dict("a"=>"aa")
+        @fact a["a"] --> "aa"
+        @fact a[] --> @Dict("a"=>"aa")
         a["a",1] = 11
-        @fact a["a",1] => 11
-        @fact a["a"] => @Dict(1 => 11)
-        @fact a[] => @Dict("a" => @Dict(1 => 11))
+        @fact a["a",1] --> 11
+        @fact a["a"] --> @Dict(1 => 11)
+        @fact a[] --> @Dict("a" => @Dict(1 => 11))
         a["a",2] = 22
-        @fact a["a",2] => 22
-        @fact a["a"] => @Dict(1 => 11, 2 => 22)
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22))
+        @fact a["a",2] --> 22
+        @fact a["a"] --> @Dict(1 => 11, 2 => 22)
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22))
         a["b"] = data
-        @fact a["b"] => data
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
+        @fact a["b"] --> data
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
 
         delete!(a, "a")
-        @fact a[] => @Dict("b" => data)
+        @fact a[] --> @Dict("b" => data)
 
         delete!(a, "b")
-        @fact a[] => Dict()
+        @fact a[] --> Dict()
 
         a[] = @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
         a["a"] = @Dict(1 => 11, 2 => 22)
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data)
         a[:c] = "c"
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
     end
 
     dictopen(filename) do a
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
-        @fact haskey(a, "a") => true
-        @fact haskey(a, "z") => false
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
+        @fact haskey(a, "a") --> true
+        @fact haskey(a, "z") --> false
 
-        @fact in("a",keys(a)) => true
-        @fact in("b",keys(a)) => true
-        @fact in(:c,keys(a)) => true
-        @fact in(1,keys(a, "a")) => true
-        @fact in(2,keys(a, "a")) => true
+        @fact in("a",keys(a)) --> true
+        @fact in("b",keys(a)) --> true
+        @fact in(:c,keys(a)) --> true
+        @fact in(1,keys(a, "a")) --> true
+        @fact in(2,keys(a, "a")) --> true
 
         a[(1,)] = 1
-        @fact a[(1,)] => 1
-        @fact in((1,),keys(a)) => true
+        @fact a[(1,)] --> 1
+        @fact in((1,),keys(a)) --> true
 
-        @fact in(@Dict(1 => 11, 2 => 22),values(a)) => true
-        @fact in(11,values(a,"a")) => true
-        @fact in(22,values(a,"a")) => true
-        @fact keys(a,"b") => Any[]
-        @fact values(a,"b") => Any[]
+        @fact in(@Dict(1 => 11, 2 => 22),values(a)) --> true
+        @fact in(11,values(a,"a")) --> true
+        @fact in(22,values(a,"a")) --> true
+        @fact keys(a,"b") --> Any[]
+        @fact values(a,"b") --> Any[]
 
-        @fact get(a, 1, "a") => @Dict(1 => 11, 2 => 22)
-        @fact get(a, 1, "z") => 1
+        @fact get(a, 1, "a") --> @Dict(1 => 11, 2 => 22)
+        @fact get(a, 1, "z") --> 1
 
-        @fact getkey(a, 1, "a") => ("a",)
-        @fact getkey(a, 1, "z") => 1
+        @fact getkey(a, 1, "a") --> ("a",)
+        @fact getkey(a, 1, "z") --> 1
     end
 
     context("overwrite fields") do
@@ -105,7 +106,11 @@ shouldtest("dictread") do
     a = @Dict(:1 => 1, :dict => @Dict(:2 => 2, :3 => 3))
     dictwrite(a, filename)
     r = dictread(filename)
-    @fact r => a
+    @fact r --> a
+    r = dictread(filename, :1)
+    @fact r --> 1
+    r = dictread(filename, :dict, :2)
+    @fact r --> 2
 end
 
 shouldtest("Compacting") do
@@ -119,25 +124,25 @@ shouldtest("Compacting") do
     end       
     compact(filename)
     dictopen(filename) do a
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
     end       
-    @fact filesize(filename)<oldsize => true
+    @fact filesize(filename) < oldsize --> true
 end
 
 shouldtest("Error handling") do
     dictopen(filename) do a
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
         try
             a["asdf"]
-            @fact "no exception" => "exception"
+            @fact "no exception" --> "exception"
         catch
-            @fact "exception" => "exception"
+            @fact "exception" --> "exception"
         end
         try
             a["a",123]
-            @fact "no exception" => "exception"
+            @fact "no exception" --> "exception"
         catch
-            @fact "exception" => "exception"
+            @fact "exception" --> "exception"
         end
     end
 end
@@ -145,8 +150,8 @@ end
 shouldtest("Tuple handling") do
     dictopen(filename) do a
         a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] = 123
-        @fact a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] => 123
-        @fact a["a"]["b"] => @Dict(("ID", "param", 0, 0x5bca7c69b794f8ce) => 123)
+        @fact a["a","b",("ID", "param", 0, 0x5bca7c69b794f8ce)] --> 123
+        @fact a["a"]["b"] --> @Dict(("ID", "param", 0, 0x5bca7c69b794f8ce) => 123)
     end
 end
 
@@ -155,7 +160,7 @@ end
         data = rand(2,3)
         setindex!(a, data, "m"; mmap = true)
         m = DictFiles.mmap(a, "m") 
-        @fact copy(m) => data
+        @fact copy(m) --> data
     end
 end : nothing
 
@@ -164,30 +169,30 @@ shouldtest("Subviews through DictFile(a, keys)") do
     dictopen(filename) do a
         a[] = @Dict("a" => @Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
         b = DictFile(a, "a")
-        @fact keys(b) => [1,2]
-        @fact values(b) => [11,22]
+        @fact keys(b) --> [1,2]
+        @fact values(b) --> [11,22]
         b[3] = 33
-        @fact b[3] => 33
-        @fact a[] => @Dict("a" => @Dict(1 => 11, 2 => 22, 3 => 33), "b" => data, :c => "c")
+        @fact b[3] --> 33
+        @fact a[] --> @Dict("a" => @Dict(1 => 11, 2 => 22, 3 => 33), "b" => data, :c => "c")
     end
 end
 
 shouldtest("makekey(a, k)") do
     dictopen(filename) do a
-        @fact DictFiles.makekey(a, (1,)) => "/1"
-        @fact DictFiles.makekey(a, ('a',)) => "/'a'"
-        @fact DictFiles.makekey(a, ("a",)) => "/\"a\""
-        @fact DictFiles.makekey(a, (1,2)) => "/1/2"
-        @fact DictFiles.makekey(a, (1,2,3,4,5)) => "/1/2/3/4/5"
-        @fact DictFiles.makekey(a, (1,'a',3)) => "/1/'a'/3"
-        @fact DictFiles.makekey(a, (1,'a',"a")) => "/1/'a'/\"a\""
-        @fact DictFiles.makekey(a, ("abc",)) => "/\"abc\""
-        @fact DictFiles.makekey(a, ("abc",(1,2))) => "/\"abc\"/(1,2)"
-        @fact DictFiles.makekey(a, (1.,(1,2))) => "/1.0/(1,2)"
-        @fact DictFiles.makekey(a, (1.f0,(1,2))) => "/1.0f0/(1,2)"
-        @fact DictFiles.makekey(a, (1.f0,(1,2),"asdf",'b')) => "/1.0f0/(1,2)/\"asdf\"/'b'"
-        @fact DictFiles.makekey(a, ([1,2,3],)) => "/[1,2,3]"
-        @fact DictFiles.makekey(a, (1000,)) => "/1000"
+        @fact DictFiles.makekey(a, (1,)) --> "/1"
+        @fact DictFiles.makekey(a, ('a',)) --> "/'a'"
+        @fact DictFiles.makekey(a, ("a",)) --> "/\"a\""
+        @fact DictFiles.makekey(a, (1,2)) --> "/1/2"
+        @fact DictFiles.makekey(a, (1,2,3,4,5)) --> "/1/2/3/4/5"
+        @fact DictFiles.makekey(a, (1,'a',3)) --> "/1/'a'/3"
+        @fact DictFiles.makekey(a, (1,'a',"a")) --> "/1/'a'/\"a\""
+        @fact DictFiles.makekey(a, ("abc",)) --> "/\"abc\""
+        @fact DictFiles.makekey(a, ("abc",(1,2))) --> "/\"abc\"/(1,2)"
+        @fact DictFiles.makekey(a, (1.,(1,2))) --> "/1.0/(1,2)"
+        @fact DictFiles.makekey(a, (1.f0,(1,2))) --> "/1.0f0/(1,2)"
+        @fact DictFiles.makekey(a, (1.f0,(1,2),"asdf",'b')) --> "/1.0f0/(1,2)/\"asdf\"/'b'"
+        @fact DictFiles.makekey(a, ([1,2,3],)) --> "/[1,2,3]"
+        @fact DictFiles.makekey(a, (1000,)) --> "/1000"
     end
 end
 
@@ -220,7 +225,7 @@ shouldtest("stress test") do
 			    @show i readdata[i] data[i]
 			end
 		end
-        @fact readdata  => data
+        @fact readdata  --> data
     end
 
     DictFiles.compact(filename)
@@ -235,8 +240,8 @@ shouldtest("parallel") do
     filename = tempname()
     a = @fetchfrom 2 DictFile(filename)
     a[1] = 10
-    @fact a[1] => 10
-    @fact (@fetchfrom 3 a[1]) => 10
+    # @fact a[1] --> 10
+    # @fact (@fetchfrom 3 a[1]) --> 10
 end
 
 shouldtest("blosc") do
@@ -245,7 +250,7 @@ shouldtest("blosc") do
 		data = rand(2,3)
 		b = blosc(data)
 		a["a"] = b
-		@fact a["a"] => data
+		@fact a["a"] --> data
 	end
 end
 
