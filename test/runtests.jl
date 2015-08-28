@@ -28,8 +28,8 @@ shouldtest("basic") do
     dictopen(filename) do a
         @fact stat(filename).inode --> not(0)
 
-		a["a"] = (1,2,"a")
-		@fact a["a"] --> (1,2,"a")
+        a["a"] = (1,2,"a")
+        @fact a["a"] --> (1,2,"a")
         a["a"] = "aa"
         @fact a["a"] --> "aa"
         @fact a[] --> @Dict("a"=>"aa")
@@ -197,7 +197,7 @@ shouldtest("makekey(a, k)") do
 end
 
 try
-	rm(filename)
+    rm(filename)
 end
 
 
@@ -220,11 +220,11 @@ shouldtest("stress test") do
                 readdata[i] = a[key...]
             end
         end
-		for i = 1:length(data) # FIXME remove this
-			if readdata[i] != data[i]
-			    @show i readdata[i] data[i]
-			end
-		end
+        for i = 1:length(data) # FIXME remove this
+            if readdata[i] != data[i]
+                @show i readdata[i] data[i]
+            end
+        end
         @fact readdata  --> data
     end
 
@@ -235,23 +235,23 @@ end
 
 
 shouldtest("parallel") do
-    addprocs(2)
+    addprocs(3)
     @everywhere using DictFiles
     filename = tempname()
     a = @fetchfrom 2 DictFile(filename)
     a[1] = 10
-    # @fact a[1] --> 10
-    # @fact (@fetchfrom 3 a[1]) --> 10
+    @fact (@fetchfrom 2 a[1]) --> 10
+    @fact (@fetchfrom 3 a[1]) --> 10
 end
 
 shouldtest("blosc") do
     filename = tempname()
-	dictopen(filename) do a
-		data = rand(2,3)
-		b = blosc(data)
-		a["a"] = b
-		@fact a["a"] --> data
-	end
+    dictopen(filename) do a
+        data = rand(2,3)
+        b = blosc(data)
+        a["a"] = b
+        @fact a["a"] --> data
+    end
 end
 
 println("runtests.jl done!")

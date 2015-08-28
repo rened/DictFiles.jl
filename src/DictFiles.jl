@@ -14,7 +14,6 @@ using HDF5, JLD
 
 macro onpid(pid, a)
     quote
-		print()  # FIXME - absolutely insane workaround for serialization stack overflow
         r = @fetchfrom $pid try
             $a
         catch e
@@ -45,6 +44,7 @@ defaultmode = "r+"
 
 type DictFile
     jld::JLD.JldFile
+    ref::RemoteRef
     basekey::Tuple
     pid
     function DictFile(filename::String, mode::String = defaultmode; compress = false)
@@ -58,7 +58,8 @@ type DictFile
         end
         
         try
-            a = new(jldopen(filename, mode, compress = false, mmaparrays = false),(), myid()) 
+            ref = @spawnat myid() jldopen(filename, mode, compress = false, mmaparrays = false)
+            a = new(fetch(ref),ref,(), myid()) 
             return a
         catch e
             println("DictFile: error while trying to open file $filename")
@@ -66,7 +67,11 @@ type DictFile
             rethrow(e)
         end
     end
-    DictFile(fid::JLD.JldFile, basekey::Tuple) = (r=new(fid, basekey, myid()); finalizer(r, x -> close(x)); r)
+    function DictFile(fid::JLD.JldFile, basekey::Tuple)
+        ref = @spawnat myid() fid
+        r = new(fid, ref, basekey, myid()); finalizer(r, x -> close(x))
+        r
+    end
 end
 
 DictFile(filename::String, mode::String = defaultmode, k...) = DictFile(DictFile(filename, mode), k...)
