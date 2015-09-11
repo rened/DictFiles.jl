@@ -13,6 +13,9 @@ export snapshot, loadsnapshot
 
 function snapshot(a...)
     dictopen("/tmp/snapshot.dictfile","w") do df
+        if length(a) == 1
+            a = (:Dictfile_snapshot, a[1])
+        end
         for i = 1:2:length(a)
             df[a[i]] = a[i+1]
         end
@@ -21,9 +24,17 @@ end
 
 loadsnapshot(a...) = dictopen("/tmp/snapshot.dictfile","r") do df
     if length(a) == 0
-        df[]
+        r = df[]
+        if collect(keys(r)) == [:Dictfile_snapshot]
+            return df[:Dictfile_snapshot]
+        end
+        r
     else
-        [df[x] for x in a]
+        if length(a) == 1
+            df[a[1]]
+        else
+            Dict(zip(a, [df[x] for x in a]))
+        end
     end
 end
  

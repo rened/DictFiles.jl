@@ -254,5 +254,19 @@ shouldtest("blosc") do
     end
 end
 
+shouldtest("snapshot") do
+    data = rand(10)
+    snapshot(data)
+    @fact loadsnapshot() --> data
+    snapshot("data", data)
+    @fact loadsnapshot("data") --> data
+    @fact loadsnapshot() --> @Dict("data" => data)
+    snapshot("data", data, "a", 1)
+    @fact loadsnapshot() --> @Dict("data" => data, "a" => 1)
+    @fact loadsnapshot("a") --> 1
+    @fact loadsnapshot("data","a") --> @Dict("data" => data, "a" => 1)
+
+end
+
 println("runtests.jl done!")
 FactCheck.exitstatus()
