@@ -47,7 +47,7 @@ type DictFile
     ref::RemoteRef
     basekey::Tuple
     pid
-    function DictFile(filename::String, mode::String = defaultmode; compress = false)
+    function DictFile(filename::AbstractString, mode::AbstractString = defaultmode; compress = false)
         exists(f) = (s = stat(filename); s.inode != 0 && s.size > 0)
         if mode == "r" && !exists(filename)
             error("DictFile: file $filename does not exist")
@@ -74,7 +74,7 @@ type DictFile
     end
 end
 
-DictFile(filename::String, mode::String = defaultmode, k...) = DictFile(DictFile(filename, mode), k...)
+DictFile(filename::AbstractString, mode::AbstractString = defaultmode, k...) = DictFile(DictFile(filename, mode), k...)
 function DictFile(a::DictFile, k...) 
     d = a.jld[makekey(a,k)]
     if !(typeof(d) <: JLD.JldGroup)
@@ -322,7 +322,7 @@ end
 #####################################################
 ##   compact
 
-function compact(filename::String)
+function compact(filename::AbstractString)
     tmpfilename = tempname()
     dictopen(filename) do from
         dictopen(tmpfilename,"w") do to

@@ -204,7 +204,7 @@ end
 shouldtest("stress test") do
     nopen = 10
     nwrites = 200
-    types = [Int32,Uint32,Int64,Uint64,Float32,Float64]
+    types = [Int32,UInt32,Int64,UInt64,Float32,Float64]
     payload() = rand(types[rand(1:length(types))], tuple(1,tuple(map( x -> rand(1:5), 5)...)...)...)
 
     filename = tempname()
