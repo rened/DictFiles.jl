@@ -1,7 +1,7 @@
 VERSION >= v"0.4.0-dev+6521" && __precompile__()
 
 module DictFiles
-using Blosc, FunctionalData, Compat
+using Blosc, FunctionalData
 
 export DictFile, dictopen, dictread, dictwrite, close, compact
 export getindex, get, getkey, setindex!, delete!, blosc, deblosc
@@ -156,7 +156,7 @@ function setindex!(a::DictFile, v::Dict, k...; kargs...)
     end
 end
 
-function setindex!(a::DictFile, v::Nothing, k...; kargs...) 
+function setindex!(a::DictFile, v::Void, k...; kargs...) 
 end
 
 function setindex!(a::DictFile, v, k...; kargs...) 
@@ -337,11 +337,7 @@ function compact(filename::AbstractString)
           [copykey(tuple(x)) for x in keys(from)]
         end
     end
-    if VERSION.minor == 3  # FIXME remove once Compat is updated
-        mv(tmpfilename, filename)
-    else
-        mv(tmpfilename, filename, remove_destination=true)
-    end
+    mv(tmpfilename, filename, remove_destination=true)
 end
 
 include("snapshot.jl")
