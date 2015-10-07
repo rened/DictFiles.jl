@@ -1,16 +1,17 @@
-VERSION >= v"0.4.0-dev+6521" && __precompile__()
+__precompile__()
 
 module DictFiles
-using Blosc, FunctionalData
+using Blosc, FunctionalData, Reexport
+using HDF5
+@reexport using JLD
 
 export DictFile, dictopen, dictread, dictwrite, close, compact
 export getindex, get, getkey, setindex!, delete!, blosc, deblosc
 export mmap
-export haskey, isdict, keys, values
+export haskey, isdict, keys, values, exists
 
 import Base: getindex, get, getkey, setindex!, delete!, haskey, keys, values
 
-using HDF5, JLD
 
 macro onpid(pid, a)
     quote
