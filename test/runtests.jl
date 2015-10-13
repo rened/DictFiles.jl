@@ -56,6 +56,8 @@ shouldtest("basic") do
     dictopen(filename) do a
         @fact a[] --> Dict("a" => Dict(1 => 11, 2 => 22), "b" => data, :c => "c")
         @fact haskey(a, "a") --> true
+        @fact haskey(a, "a", 1) --> true
+        @fact haskey(a, "a", :nope) --> false
         @fact haskey(a, "z") --> false
 
         @fact in("a",keys(a)) --> true
