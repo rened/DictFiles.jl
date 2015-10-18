@@ -6,7 +6,7 @@ using HDF5
 @reexport using JLD
 
 export DictFile, dictopen, dictread, dictwrite, close, compact
-export getindex, get, getkey, setindex!, delete!, blosc, deblosc
+export getindex, get, getkey, setindex!, delete!, blosc, deblosc, serialized, deserialize
 export mmap
 export haskey, isdict, keys, values, exists
 
@@ -32,6 +32,20 @@ end
 function deblosc(a)
     if isa(a, Tuple) && a[1] == :blosc_compressed
 		reshape(decompress(a[2], a[3]), a[4:end])
+    else
+        a
+    end
+end
+
+function serialized(a; kargs...)
+    io = IOBuffer()
+    serialize(io, a)
+    tuple(:dictfiles_serializeditem, takebuf_array(io))
+end
+
+function deserialize(a)
+    if isa(a, Tuple) && a[1] == :dictfiles_serializeditem
+		Base.deserialize(IOBuffer(snd(a)))
     else
         a
     end
@@ -142,7 +156,7 @@ function getindex(a::DictFile, k...)
             d2 = DictFile(a, k...)
             return Dict(zip(k2, map(x->getindex(d2,x), k2)))
         else
-            return deblosc(read(a.jld, key))
+            return DictFiles.deserialize(deblosc(read(a.jld, key)))
         end
     end
 end

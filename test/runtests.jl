@@ -250,6 +250,16 @@ shouldtest("blosc") do
     end
 end
 
+shouldtest("serialize") do
+    filename = tempname()
+    dictopen(filename) do a
+        data = rand(2,3)
+        b = serialized(data)
+        a["a"] = b
+        @fact a["a"] --> data
+    end
+end
+
 shouldtest("snapshot") do
     data = rand(10)
     snapshot(data)
