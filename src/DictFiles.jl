@@ -156,7 +156,7 @@ function getindex(a::DictFile, k...)
             d2 = DictFile(a, k...)
             return Dict(zip(k2, map(x->getindex(d2,x), k2)))
         else
-            return DictFiles.deserialize(deblosc(read(a.jld, key)))
+            return deblosc(DictFiles.deserialize(deblosc(read(a.jld, key))))
         end
     end
 end
