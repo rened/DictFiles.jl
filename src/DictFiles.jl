@@ -26,12 +26,12 @@ end
 
 function blosc(a; kargs...)
     Blosc.set_num_threads()
-    tuple(:blosc_compressed, eltype(a), compress(a; kargs...), size(a)...)
+    Any[:blosc_compressed, eltype(a), compress(a; kargs...), size(a)]
 end
 
 function deblosc(a)
-    if isa(a, Tuple) && a[1] == :blosc_compressed
-		reshape(decompress(a[2], a[3]), a[4:end])
+    if isa(a, Array) && length(a) > 0 && a[1] == :blosc_compressed
+		reshape(decompress(a[2], a[3]), a[4])
     else
         a
     end
@@ -40,11 +40,11 @@ end
 function serialized(a; kargs...)
     io = IOBuffer()
     serialize(io, a)
-    tuple(:dictfiles_serializeditem, takebuf_array(io))
+    Any[:dictfiles_serializeditem, takebuf_array(io)]
 end
 
 function deserialize(a)
-    if isa(a, Tuple) && a[1] == :dictfiles_serializeditem
+    if isa(a, Array) && length(a) > 0 && a[1] == :dictfiles_serializeditem
 		Base.deserialize(IOBuffer(snd(a)))
     else
         a
