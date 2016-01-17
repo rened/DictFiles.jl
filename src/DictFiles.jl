@@ -6,7 +6,7 @@ using HDF5
 @reexport using JLD
 
 export DictFile, dictopen, dictread, dictwrite, close, compact
-export getindex, get, getkey, setindex!, delete!, blosc, deblosc, serialized, deserialize
+export getindex, get, getkey, at, setindex!, delete!, blosc, deblosc, serialized, deserialize
 export mmap
 export haskey, isdict, keys, values, exists
 
@@ -217,6 +217,8 @@ end
 
 get(a::DictFile, default, k...)    = haskey(a, k...) ? a[k...] : default
 getkey(a::DictFile, default, k...) = haskey(a, k...) ? k : default
+import FunctionalData.at
+at(a::DictFile, args...) = getkey(a, args...)
 
 #####################################################
 ##   delete!
