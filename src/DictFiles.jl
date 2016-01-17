@@ -25,13 +25,14 @@ macro onpid(pid, a)
 end
 
 function blosc(a; kargs...)
-    Blosc.set_num_threads()
-    Any[:blosc_compressed, eltype(a), compress(a; kargs...), size(a)]
+    io = IOBuffer()
+    serialize(io, a)
+    Any[:blosc_compressed, compress(takebuf_array(io); kargs...)]
 end
 
 function deblosc(a)
     if isa(a, Array) && length(a) > 0 && a[1] == :blosc_compressed
-		reshape(decompress(a[2], a[3]), a[4])
+		Base.deserialize(IOBuffer(decompress(UInt8,a[2])))
     else
         a
     end
@@ -137,7 +138,9 @@ function makekey(a::DictFile, k::Tuple)
     if any(map(x->isa(x,Function), k))
         error("DictFiles.makekey: keys cannot contains functions. Key tuple was: $k")
     end
-    key = "/"*join(tuple(Base.map(repr, a.basekey)..., Base.map(repr, k)...), "/")
+    reprs = [Base.map(repr, a.basekey)..., Base.map(repr, k)...]
+    reprs = @p map reprs replace "/" "{{__Dictfiles_slash}}"
+    key = "/"*join(reprs, "/")
     #@show key
     key
 end
@@ -265,6 +268,7 @@ end
 
 import Base.keys
 function parsekey(a)
+    a = @p replace a "{{__Dictfiles_slash}}" "/"
     r = parse(a)
     r = isa(r,QuoteNode) ? Base.unquoted(r) : r
     try 

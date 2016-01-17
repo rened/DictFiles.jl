@@ -244,8 +244,10 @@ shouldtest("blosc") do
     filename = tempname()
     dictopen(filename) do a
         data = rand(2,3)
-        b = blosc(data)
-        a["a"] = b
+        a["a"] = blosc(data)
+        @fact a["a"] --> data
+        data = Dict(1 => rand(2,3), 'c' => "asdf")
+        a["a"] = blosc(data)
         @fact a["a"] --> data
     end
 end
