@@ -45,7 +45,7 @@ function serialized(a; kargs...)
 end
 
 function deserialize(a)
-    if isa(a, Array) && length(a) > 0 && a[1] == :dictfiles_serializeditem
+    if (isa(a, Array) || isa(a, Tuple)) && length(a) > 0 && a[1] == :dictfiles_serializeditem
 		Base.deserialize(IOBuffer(snd(a)))
     else
         a
