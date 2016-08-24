@@ -58,9 +58,15 @@ end
 
 defaultmode = "r+"
 
+if VERSION < v"0.5-"
+    typealias Remote RemoteRef
+else
+    typealias Remote Future
+end
+
 type DictFile
     jld::JLD.JldFile
-    ref::RemoteRef
+    ref::Remote
     basekey::Tuple
     pid
     function DictFile(filename::AbstractString, mode::AbstractString = defaultmode; compress = false)

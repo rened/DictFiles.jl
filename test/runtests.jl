@@ -206,8 +206,8 @@ shouldtest("stress test") do
     filename = tempname()
 
     for iopen = 1:nopen
-        data = cell(nwrites)
-        readdata = cell(nwrites)
+        data = Array{Any}(nwrites)
+        readdata = Array{Any}(nwrites)
         dictopen(filename) do a
             for i = 1:nwrites
                 key = map( x -> rand(1:10), 1:rand(1:3))
