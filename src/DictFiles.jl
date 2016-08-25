@@ -1,7 +1,7 @@
 __precompile__()
 
 module DictFiles
-using Blosc, FunctionalData, Reexport
+using Blosc, FunctionalData, Reexport, Compat
 using HDF5
 @reexport using JLD
 
@@ -58,15 +58,9 @@ end
 
 defaultmode = "r+"
 
-if VERSION < v"0.5-"
-    typealias Remote RemoteRef
-else
-    typealias Remote Future
-end
-
 type DictFile
     jld::JLD.JldFile
-    ref::Remote
+    ref::@compat(Future)
     basekey::Tuple
     pid
     function DictFile(filename::AbstractString, mode::AbstractString = defaultmode; compress = false)
