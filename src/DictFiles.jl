@@ -56,14 +56,14 @@ end
 #####################################################
 ##   DictFile, dictfile
 
-defaultmode = "r+"
+defaultmode(filename) = uperm(filename) & 0x2 > 0 ? "r+" : "r"
 
 type DictFile
     jld::JLD.JldFile
     ref::@compat(Future)
     basekey::Tuple
     pid
-    function DictFile(filename::AbstractString, mode::AbstractString = defaultmode; compress = false)
+    function DictFile(filename::AbstractString, mode::AbstractString = defaultmode(filename); compress = false)
         exists(f) = (s = stat(filename); s.inode != 0 && s.size > 0)
         if mode == "r" && !exists(filename)
             error("DictFile: file $filename does not exist")
@@ -90,7 +90,7 @@ type DictFile
     end
 end
 
-DictFile(filename::AbstractString, mode::AbstractString = defaultmode, k...) = DictFile(DictFile(filename, mode), k...)
+DictFile(filename::AbstractString, mode::AbstractString = defaultmode(filename), k...) = DictFile(DictFile(filename, mode), k...)
 function DictFile(a::DictFile, k...) 
     d = a.jld[makekey(a,k)]
     if !(typeof(d) <: JLD.JldGroup)
