@@ -56,7 +56,7 @@ end
 #####################################################
 ##   DictFile, dictfile
 
-defaultmode(filename) = uperm(filename) & 0x2 > 0 ? "r+" : "r"
+defaultmode(filename) = !existsfile(filename) || (uperm(filename) & 0x2 > 0) ? "r+" : "r"
 
 type DictFile
     jld::JLD.JldFile
